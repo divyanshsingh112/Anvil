@@ -3,9 +3,230 @@ generator client {
 }
 
 datasource db {
-  provider  = "postgresql"
-  url       = env("DATABASE_URL")
-  directUrl = env("DIRECT_URL")
+  provider = "postgresql"
 }
 
-// Models will be added in Phase 2
+// ─── USER ──────────────────────────────────────────────────────────
+
+model User {
+  id            String   @id @default(uuid()) @db.Uuid
+  email         String   @unique
+  displayName   String
+  avatarUrl     String?
+  xp            Int      @default(0)
+  level         Int      @default(1)
+  coins         Int      @default(0)
+  streak        Int      @default(0)
+  longestStreak Int      @default(0)
+  activeTheme   String   @default("default")
+  heroClass     String?  // warrior | mage | rogue | balanced
+  momentumScore Decimal  @default(100)
+  createdAt     DateTime @default(now())
+  lastLoginAt   DateTime?
+
+  habits            Habit[]
+  completions       Completion[]
+  inventory         Inventory[]
+  userAchievements  UserAchievement[]
+  bossBattles       BossBattle[]
+  questChains       QuestChain[]
+  rivalsAsChallenger Rival[] @relation("RivalsAsChallenger")
+  rivalsAsRival      Rival[] @relation("RivalsAsRival")
+  mlUserProfile     MlUserProfile?
+  stats             UserStats?
+}
+
+// ─── HABIT ─────────────────────────────────────────────────────────
+
+model Habit {
+  id         String    @id @default(uuid()) @db.Uuid
+  userId     String    @db.Uuid
+  name       String
+  class      String    // warrior | mage | rogue
+  difficulty String    // novice | adept | master
+  year       Int
+  month      Int
+  activeDays Int[]
+  createdAt  DateTime  @default(now())
+  archivedAt DateTime?
+
+  user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  completions Completion[]
+
+  @@index([userId, year, month])
+}
+
+// ─── COMPLETION ────────────────────────────────────────────────────
+
+model Completion {
+  id           String   @id @default(uuid()) @db.Uuid
+  habitId      String   @db.Uuid
+  userId       String   @db.Uuid
+  date         DateTime @db.Date
+  loggedAt     DateTime
+  completedAt  DateTime
+  timeBucket   String   // morning | afternoon | evening | night
+  timeAccuracy String   // confirmed | estimated | skip
+  note         String?  // Quest Journal micro diary, max 100 chars
+
+  habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, date])
+  @@index([habitId, date])
+}
+
+// ─── USER STATS ────────────────────────────────────────────────────
+
+model UserStats {
+  userId             String  @id @db.Uuid
+  totalCompletions   Int     @default(0)
+  perfectDays        Int     @default(0)
+  currentStreak      Int     @default(0)
+  longestStreak      Int     @default(0)
+  warriorCompletions Int     @default(0)
+  mageCompletions    Int     @default(0)
+  rogueCompletions   Int     @default(0)
+  strScore           Decimal @default(0)
+  intScore           Decimal @default(0)
+  wisScore           Decimal @default(0)
+  chaScore           Decimal @default(0)
+  updatedAt          DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── SHOP ITEM ─────────────────────────────────────────────────────
+
+model ShopItem {
+  id             String    @id @default(uuid()) @db.Uuid
+  name           String
+  type           String    // theme | consumable | cosmetic
+  priceCoins     Int
+  description    String
+  cssVariables   Json?
+  isLimited      Boolean   @default(false)
+  availableUntil DateTime?
+
+  inventory Inventory[]
+}
+
+// ─── INVENTORY ─────────────────────────────────────────────────────
+
+model Inventory {
+  id          String   @id @default(uuid()) @db.Uuid
+  userId      String   @db.Uuid
+  itemId      String   @db.Uuid
+  purchasedAt DateTime @default(now())
+  isEquipped  Boolean  @default(false)
+
+  user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  item ShopItem @relation(fields: [itemId], references: [id], onDelete: Cascade)
+}
+
+// ─── ACHIEVEMENT ───────────────────────────────────────────────────
+
+model Achievement {
+  id          String @id @default(uuid()) @db.Uuid
+  key         String @unique
+  name        String
+  description String
+  xpReward    Int
+  icon        String
+
+  userAchievements UserAchievement[]
+}
+
+// ─── USER ACHIEVEMENT ──────────────────────────────────────────────
+
+model UserAchievement {
+  userId        String   @db.Uuid
+  achievementId String   @db.Uuid
+  unlockedAt    DateTime @default(now())
+
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievement Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+
+  @@id([userId, achievementId])
+}
+
+// ─── BOSS BATTLE ───────────────────────────────────────────────────
+
+model BossBattle {
+  id             String    @id @default(uuid()) @db.Uuid
+  userId         String    @db.Uuid
+  weekStart      DateTime  @db.Date
+  bossName       String
+  bossClass      String
+  challengeQuest String
+  status         String    // active | defeated | failed
+  rewardCoins    Int
+  rewardXp       Int
+  createdAt      DateTime  @default(now())
+  resolvedAt     DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── QUEST CHAIN ───────────────────────────────────────────────────
+
+model QuestChain {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  name      String
+  habitIds  String[] // array of Habit UUIDs
+  bonusXp   Int
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── RIVAL ─────────────────────────────────────────────────────────
+
+model Rival {
+  id              String   @id @default(uuid()) @db.Uuid
+  challengerId    String   @db.Uuid
+  rivalId         String   @db.Uuid
+  habitName       String
+  startDate       DateTime @db.Date
+  endDate         DateTime @db.Date
+  challengerCount Int      @default(0)
+  rivalCount      Int      @default(0)
+  status          String   // pending | active | completed | declined
+  winnerId        String?  @db.Uuid
+  defeatMessage   String?
+  createdAt       DateTime @default(now())
+
+  challenger User @relation("RivalsAsChallenger", fields: [challengerId], references: [id], onDelete: Cascade)
+  rival      User @relation("RivalsAsRival", fields: [rivalId], references: [id], onDelete: Cascade)
+}
+
+// ─── ML USER PROFILE ──────────────────────────────────────────────
+
+model MlUserProfile {
+  userId                  String   @id @db.Uuid
+  behavioralArchetype     String?
+  dangerZoneHours         Int[]
+  bestTimeBucket          String?
+  procrastinationScore    Decimal?
+  lastMinuteRate          Decimal?
+  avoidancePattern        Json?
+  momentumHistory         Json?
+  predictedCompletionRate Decimal?
+  lastComputedAt          DateTime?
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── SEASONAL EVENT ────────────────────────────────────────────────
+
+model SeasonalEvent {
+  id             String   @id @default(uuid()) @db.Uuid
+  name           String
+  description    String
+  startDate      DateTime @db.Date
+  endDate        DateTime @db.Date
+  bonusClass     String   // warrior | mage | rogue | all
+  xpMultiplier   Decimal
+  limitedItemIds String[]
+}
