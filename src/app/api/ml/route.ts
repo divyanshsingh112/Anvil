@@ -1,1 +1,3 @@
-// ML API route — logic will be added in Phase 4
+export async function GET() {
+  return Response.json({ message: "ML API stub" });
+}

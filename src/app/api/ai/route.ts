@@ -1,1 +1,3 @@
-// AI API route — logic will be added in Phase 4
+export async function GET() {
+  return Response.json({ message: "AI API stub" });
+}
