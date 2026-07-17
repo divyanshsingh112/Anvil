@@ -23,6 +23,7 @@ model User {
   momentumScore Decimal  @default(100)
   createdAt     DateTime @default(now())
   lastLoginAt   DateTime?
+  password      String?   // nullable — Google users won't have one
 
   habits            Habit[]
   completions       Completion[]
