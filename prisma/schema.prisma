@@ -93,6 +93,7 @@ model UserStats {
   wisScore           Decimal @default(0)
   chaScore           Decimal @default(0)
   updatedAt          DateTime @updatedAt
+  lastPerfectDay     DateTime? @db.Date // Prevent double-awarding coins
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }

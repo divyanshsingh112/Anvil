@@ -1,1 +1,63 @@
-// User store — will be implemented in Phase 4
+import { create } from "zustand";
+
+interface UserState {
+  xp: number;
+  level: number;
+  coins: number;
+  streak: number;
+  longestStreak: number;
+  isLoading: boolean;
+  error: string | null;
+
+  fetchUserStats: () => Promise<void>;
+  applyToggleResult: (data: {
+    xp: number;
+    level: number;
+    coins: number;
+    streak: number;
+    longestStreak: number;
+  }) => void;
+}
+
+export const useUserStore = create<UserState>((set) => ({
+  xp: 0,
+  level: 1,
+  coins: 0,
+  streak: 0,
+  longestStreak: 0,
+  isLoading: false,
+  error: null,
+
+  fetchUserStats: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await fetch("/api/user/stats");
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to fetch user stats");
+      }
+      const data = await res.json();
+      set({
+        xp: data.xp,
+        level: data.level,
+        coins: data.coins,
+        streak: data.streak,
+        longestStreak: data.longestStreak,
+        isLoading: false,
+      });
+    } catch (err) {
+      const errorObj = err as Error;
+      set({ error: errorObj.message, isLoading: false });
+    }
+  },
+
+  applyToggleResult: (data) => {
+    set({
+      xp: data.xp,
+      level: data.level,
+      coins: data.coins,
+      streak: data.streak,
+      longestStreak: data.longestStreak,
+    });
+  },
+}));

@@ -1,5 +1,6 @@
 import { create } from "zustand";
 import { Habit, HabitClass, HabitDifficulty } from "@/types";
+import { useUserStore } from "@/store/useUserStore";
 
 interface HabitStore {
   habits: Habit[];
@@ -38,7 +39,18 @@ interface HabitStore {
       timeAccuracy?: "confirmed" | "estimated" | "skip";
       customCompletedAt?: string;
     }
-  ) => Promise<void>;
+  ) => Promise<{
+    completion: import("@/types").Completion | null;
+    user: {
+      xp: number;
+      level: number;
+      coins: number;
+      streak: number;
+      longestStreak: number;
+    };
+    leveledUp: boolean;
+    perfectDay: boolean;
+  } | undefined>;
 }
 
 export const useHabitStore = create<HabitStore>((set, get) => ({
@@ -252,16 +264,20 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
         throw new Error(errData.error || "Failed to toggle completion");
       }
 
-      const updatedCompletion = await res.json();
+      const responseData = await res.json();
+      const { completion, user } = responseData;
+
+      // Update the user store with new gamification values
+      useUserStore.getState().applyToggleResult(user);
 
       set((state) => ({
         habits: state.habits.map((h) => {
           if (h.id !== habitId) return h;
           const currentCompletions = h.completions || [];
           let nextCompletions;
-          if (completed && updatedCompletion) {
+          if (completed && completion) {
             nextCompletions = currentCompletions.map((c) =>
-              c.id.startsWith("temp-comp-") ? updatedCompletion : c
+              c.id.startsWith("temp-comp-") ? completion : c
             );
           } else {
             nextCompletions = currentCompletions.filter((c) => !c.date.startsWith(todayStr));
@@ -269,6 +285,8 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
           return { ...h, completions: nextCompletions };
         }),
       }));
+
+      return responseData;
     } catch (err) {
       set({ habits: previousHabits });
       const errorObj = err as Error;
