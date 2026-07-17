@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useHabitStore } from "@/store/useHabitStore";
 import HabitList from "@/components/habits/HabitList";
 import HabitForm from "@/components/habits/HabitForm";
+import SessionTimePrompt from "@/components/habits/SessionTimePrompt";
 import { Habit } from "@/types";
 import { Plus } from "lucide-react";
 
@@ -30,14 +31,24 @@ export default function HabitsPage() {
     currentMonth,
     isLoading,
     error,
+    sessionTimeBucket,
     fetchHabits,
     archiveHabit,
     setCurrentPeriod,
+    toggleCompletion,
   } = useHabitStore();
 
   const [formOpen, setFormOpen] = useState(false);
   const [formMode, setFormMode] = useState<"create" | "edit">("create");
   const [selectedHabit, setSelectedHabit] = useState<Habit | undefined>(undefined);
+
+  // States to handle today's briefing intercept
+  const [promptOpen, setPromptOpen] = useState(false);
+  const [pendingToggle, setPendingToggle] = useState<{ habitId: string; completed: boolean } | null>(null);
+
+  // Check if viewing current real-world period
+  const now = new Date();
+  const isTodayPeriod = currentYear === now.getFullYear() && currentMonth === (now.getMonth() + 1);
 
   // Fetch on mount and period change
   useEffect(() => {
@@ -67,6 +78,45 @@ export default function HabitsPage() {
       } catch (err) {
         const errorObj = err as Error;
         alert(errorObj.message || "Failed to archive quest");
+      }
+    }
+  };
+
+  const handleToggleHabit = async (
+    habitId: string,
+    completed: boolean,
+    options?: {
+      timeBucket?: "morning" | "afternoon" | "evening" | "night" | null;
+      timeAccuracy?: "confirmed" | "estimated" | "skip";
+      customCompletedAt?: string;
+    }
+  ) => {
+    // Intercept if completing today and no session bucket selected yet
+    const resolved = sessionStorage.getItem("anvil_session_time_bucket_prompt_resolved") === "true";
+    if (completed && !sessionTimeBucket && !resolved && !options) {
+      setPendingToggle({ habitId, completed });
+      setPromptOpen(true);
+      return;
+    }
+
+    try {
+      await toggleCompletion(habitId, completed, options);
+    } catch (err) {
+      const errorObj = err as Error;
+      alert(errorObj.message || "Failed to toggle completion");
+    }
+  };
+
+  const handlePromptResolve = async () => {
+    setPromptOpen(false);
+    if (pendingToggle) {
+      try {
+        await toggleCompletion(pendingToggle.habitId, pendingToggle.completed);
+      } catch (err) {
+        const errorObj = err as Error;
+        alert(errorObj.message || "Failed to complete quest after briefing");
+      } finally {
+        setPendingToggle(null);
       }
     }
   };
@@ -154,6 +204,8 @@ export default function HabitsPage() {
           onEditHabit={handleEditClick}
           onArchiveHabit={handleArchiveClick}
           onCreateQuestClick={handleCreateClick}
+          onToggleHabit={handleToggleHabit}
+          isTodayPeriod={isTodayPeriod}
         />
       )}
 
@@ -179,6 +231,11 @@ export default function HabitsPage() {
             />
           </div>
         </div>
+      )}
+
+      {/* Session Time Briefing Prompt Dialog/Overlay */}
+      {promptOpen && (
+        <SessionTimePrompt onResolve={handlePromptResolve} />
       )}
     </main>
   );

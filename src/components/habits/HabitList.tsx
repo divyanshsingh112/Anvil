@@ -8,6 +8,16 @@ interface HabitListProps {
   onEditHabit: (habit: Habit) => void;
   onArchiveHabit: (id: string) => void;
   onCreateQuestClick: () => void;
+  onToggleHabit: (
+    habitId: string,
+    completed: boolean,
+    options?: {
+      timeBucket?: "morning" | "afternoon" | "evening" | "night" | null;
+      timeAccuracy?: "confirmed" | "estimated" | "skip";
+      customCompletedAt?: string;
+    }
+  ) => Promise<void>;
+  isTodayPeriod: boolean;
 }
 
 export default function HabitList({
@@ -15,6 +25,8 @@ export default function HabitList({
   onEditHabit,
   onArchiveHabit,
   onCreateQuestClick,
+  onToggleHabit,
+  isTodayPeriod,
 }: HabitListProps) {
   if (habits.length === 0) {
     return (
@@ -44,6 +56,8 @@ export default function HabitList({
           habit={habit}
           onEdit={onEditHabit}
           onArchive={onArchiveHabit}
+          onToggle={onToggleHabit}
+          isTodayPeriod={isTodayPeriod}
         />
       ))}
     </div>

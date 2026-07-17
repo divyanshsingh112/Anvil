@@ -7,8 +7,10 @@ interface HabitStore {
   currentMonth: number;
   isLoading: boolean;
   error: string | null;
+  sessionTimeBucket: "morning" | "afternoon" | "evening" | "night" | null;
   
   setCurrentPeriod: (year: number, month: number) => void;
+  setSessionTimeBucket: (bucket: "morning" | "afternoon" | "evening" | "night" | null) => void;
   fetchHabits: (year: number, month: number) => Promise<void>;
   createHabit: (data: {
     name: string;
@@ -28,6 +30,15 @@ interface HabitStore {
     }
   ) => Promise<void>;
   archiveHabit: (id: string) => Promise<void>;
+  toggleCompletion: (
+    habitId: string,
+    completed: boolean,
+    options?: {
+      timeBucket?: "morning" | "afternoon" | "evening" | "night" | null;
+      timeAccuracy?: "confirmed" | "estimated" | "skip";
+      customCompletedAt?: string;
+    }
+  ) => Promise<void>;
 }
 
 export const useHabitStore = create<HabitStore>((set, get) => ({
@@ -36,9 +47,14 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
   currentMonth: new Date().getMonth() + 1,
   isLoading: false,
   error: null,
+  sessionTimeBucket: null,
 
   setCurrentPeriod: (year, month) => {
     set({ currentYear: year, currentMonth: month });
+  },
+
+  setSessionTimeBucket: (bucket) => {
+    set({ sessionTimeBucket: bucket });
   },
 
   fetchHabits: async (year, month) => {
@@ -73,6 +89,7 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
       activeDays: data.activeDays,
       createdAt: new Date().toISOString(),
       archivedAt: null,
+      completions: [],
     };
 
     // Optimistically add to state
@@ -171,6 +188,91 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
     } catch (err) {
       const errorObj = err as Error;
       set({ error: errorObj.message, isLoading: false });
+      throw err;
+    }
+  },
+
+  toggleCompletion: async (habitId, completed, options) => {
+    set({ error: null });
+    const previousHabits = get().habits;
+
+    const now = new Date();
+    // YYYY-MM-DD string representation of today's date for local matching
+    const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
+
+    // Optimistically update the completions list inside the target habit
+    set((state) => ({
+      habits: state.habits.map((h) => {
+        if (h.id !== habitId) return h;
+        
+        const currentCompletions = h.completions || [];
+        let nextCompletions;
+        
+        if (completed) {
+          // If already completed for today, do not duplicate
+          if (currentCompletions.some((c) => c.date.startsWith(todayStr))) {
+            return h;
+          }
+          
+          const optimisticCompletion = {
+            id: `temp-comp-${Date.now()}`,
+            habitId,
+            userId: "",
+            date: todayStr,
+            loggedAt: now.toISOString(),
+            completedAt: (options?.customCompletedAt ? new Date(options.customCompletedAt) : now).toISOString(),
+            timeBucket: options?.timeBucket || get().sessionTimeBucket || "morning",
+            timeAccuracy: options?.timeAccuracy || (get().sessionTimeBucket ? "estimated" : "skip"),
+            note: null,
+          };
+          nextCompletions = [...currentCompletions, optimisticCompletion];
+        } else {
+          nextCompletions = currentCompletions.filter((c) => !c.date.startsWith(todayStr));
+        }
+
+        return { ...h, completions: nextCompletions };
+      }),
+    }));
+
+    try {
+      const res = await fetch("/api/completions/toggle", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          habitId,
+          completed,
+          timeBucket: options?.timeBucket ?? get().sessionTimeBucket,
+          timeAccuracy: options?.timeAccuracy ?? (get().sessionTimeBucket ? "estimated" : "skip"),
+          customCompletedAt: options?.customCompletedAt,
+        }),
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to toggle completion");
+      }
+
+      const updatedCompletion = await res.json();
+
+      set((state) => ({
+        habits: state.habits.map((h) => {
+          if (h.id !== habitId) return h;
+          const currentCompletions = h.completions || [];
+          let nextCompletions;
+          if (completed && updatedCompletion) {
+            nextCompletions = currentCompletions.map((c) =>
+              c.id.startsWith("temp-comp-") ? updatedCompletion : c
+            );
+          } else {
+            nextCompletions = currentCompletions.filter((c) => !c.date.startsWith(todayStr));
+          }
+          return { ...h, completions: nextCompletions };
+        }),
+      }));
+    } catch (err) {
+      set({ habits: previousHabits });
+      const errorObj = err as Error;
+      set({ error: errorObj.message });
       throw err;
     }
   },

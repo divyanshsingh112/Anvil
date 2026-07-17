@@ -38,6 +38,9 @@ export async function GET(request: Request) {
         month,
         archivedAt: null,
       },
+      include: {
+        completions: true,
+      },
       orderBy: {
         createdAt: "desc",
       },
