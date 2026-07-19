@@ -54,6 +54,14 @@ export async function checkAndApplyStreakDecayAndRecharge(
     console.log(`[Streak Shield] Recharged 1 free charge for user ${userId}. Charges: ${user.freeFreezeCharges}`);
   }
 
+  // If user has already completed a habit today, the decay check for yesterday has already been resolved for today.
+  const todayCompletionsCount = await tx.completion.count({
+    where: { userId, date: today },
+  });
+  if (todayCompletionsCount > 0) {
+    return user;
+  }
+
   // 3. Day-over-day Streak Decay Check
   // Check if they completed any habits yesterday
   const yesterdayCompletionsCount = await tx.completion.count({
