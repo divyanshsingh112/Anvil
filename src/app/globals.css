@@ -142,10 +142,10 @@ body {
   background: linear-gradient(90deg, var(--accent-teal), var(--accent-purple));
 }
 .stat-card--streak::after {
-  background: linear-gradient(90deg, var(--accent-gold), #ef4444);
+  background: linear-gradient(90deg, var(--accent-gold), var(--danger));
 }
 .stat-card--quests::after {
-  background: linear-gradient(90deg, var(--accent-purple), #a855f7);
+  background: linear-gradient(90deg, var(--accent-purple), var(--heat-3));
 }
 
 .progress-bar {
@@ -157,7 +157,7 @@ body {
 .progress-bar__fill {
   height: 100%;
   border-radius: 999px;
-  background: linear-gradient(90deg, var(--accent-purple), #a855f7);
+  background: linear-gradient(90deg, var(--accent-purple), var(--heat-3));
   transition: width 0.6s ease;
 }
 

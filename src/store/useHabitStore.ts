@@ -1,5 +1,5 @@
 import { create } from "zustand";
-import { Habit, HabitClass, HabitDifficulty } from "@/types";
+import { Habit, HabitClass, HabitDifficulty, ToggleResponse } from "@/types";
 import { useUserStore } from "@/store/useUserStore";
 
 interface HabitStore {
@@ -39,18 +39,7 @@ interface HabitStore {
       timeAccuracy?: "confirmed" | "estimated" | "skip";
       customCompletedAt?: string;
     }
-  ) => Promise<{
-    completion: import("@/types").Completion | null;
-    user: {
-      xp: number;
-      level: number;
-      coins: number;
-      streak: number;
-      longestStreak: number;
-    };
-    leveledUp: boolean;
-    perfectDay: boolean;
-  } | undefined>;
+  ) => Promise<ToggleResponse | undefined>;
 }
 
 export const useHabitStore = create<HabitStore>((set, get) => ({

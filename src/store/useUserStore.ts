@@ -1,22 +1,12 @@
 import { create } from "zustand";
+import { UserGamification } from "@/types";
 
-interface UserState {
-  xp: number;
-  level: number;
-  coins: number;
-  streak: number;
-  longestStreak: number;
+interface UserState extends UserGamification {
   isLoading: boolean;
   error: string | null;
 
   fetchUserStats: () => Promise<void>;
-  applyToggleResult: (data: {
-    xp: number;
-    level: number;
-    coins: number;
-    streak: number;
-    longestStreak: number;
-  }) => void;
+  applyToggleResult: (data: UserGamification) => void;
 }
 
 export const useUserStore = create<UserState>((set) => ({

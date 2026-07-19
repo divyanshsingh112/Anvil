@@ -26,3 +26,19 @@ export interface Habit {
   archivedAt: Date | string | null;
   completions?: Completion[];
 }
+
+export interface UserGamification {
+  xp: number;
+  level: number;
+  coins: number;
+  streak: number;
+  longestStreak: number;
+}
+
+export interface ToggleResponse {
+  completion: Completion | null;
+  user: UserGamification;
+  leveledUp: boolean;
+  perfectDay: boolean;
+}
+
