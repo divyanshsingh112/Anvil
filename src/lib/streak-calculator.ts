@@ -15,13 +15,13 @@ export async function calculateStreakOnCompletion(
   today: Date,
   currentStreak: number
 ): Promise<StreakResult> {
-  // Count today's completions before we write the new one
+  // Count today's completions (since the write has already happened, this will be >= 1)
   const todayCompletionsCount = await tx.completion.count({
     where: { userId, date: today },
   });
 
-  // If they already have completions today, the streak was already updated/incremented
-  if (todayCompletionsCount > 0) {
+  // If they already have other completions today, the streak was already updated/incremented
+  if (todayCompletionsCount > 1) {
     return { newStreak: currentStreak, changed: false };
   }
 
@@ -48,16 +48,17 @@ export async function calculateStreakOnUncompletion(
   today: Date,
   currentStreak: number
 ): Promise<StreakResult> {
-  // Count today's completions (which still includes the one we are about to delete)
+  // Count today's completions (since the deletion has already happened, this will be >= 0)
   const todayCompletionsCount = await tx.completion.count({
     where: { userId, date: today },
   });
 
-  // If this is the last completion of today, deleting it means the streak decrements
-  if (todayCompletionsCount === 1) {
+  // If there are no completions left for today, the streak decrements
+  if (todayCompletionsCount === 0) {
     return { newStreak: Math.max(0, currentStreak - 1), changed: true };
   }
 
   // Otherwise, they still have other completions today, so the streak remains unchanged
   return { newStreak: currentStreak, changed: false };
 }
+
