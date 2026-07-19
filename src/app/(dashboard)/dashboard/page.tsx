@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar, ChevronRight, Swords } from "lucide-react";
+import WeeklyReportCard from "@/components/dashboard/WeeklyReportCard";
 
 interface YearSummary {
   year: number;
@@ -55,6 +56,9 @@ export default function DashboardPage() {
           Select a year to explore your habit journey
         </p>
       </div>
+
+      {/* Weekly Report Card Widget */}
+      <WeeklyReportCard />
 
       {/* Error */}
       {error && (
