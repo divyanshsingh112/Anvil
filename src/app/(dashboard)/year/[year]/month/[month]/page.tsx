@@ -10,6 +10,7 @@ import SessionTimePrompt from "@/components/habits/SessionTimePrompt";
 import Breadcrumb from "@/components/shared/Breadcrumb";
 import Heatmap from "@/components/dashboard/Heatmap";
 import MonthStats from "@/components/dashboard/MonthStats";
+import StreakBadge from "@/components/gamification/StreakBadge";
 import { Habit } from "@/types";
 import { Plus, Coins, Trophy, Flame } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -49,7 +50,6 @@ export default function MonthTrackerPage() {
     xp,
     level,
     coins,
-    streak,
     longestStreak,
     fetchUserStats,
   } = useUserStore();
@@ -255,20 +255,7 @@ export default function MonthTrackerPage() {
           </div>
         </div>
 
-        <div className="flex items-center gap-3">
-          <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-orange-950/40 border border-orange-800">
-            <Flame className="h-5 w-5 text-orange-400" />
-          </div>
-          <div>
-            <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Streak
-            </div>
-            <div className="text-xl font-black text-white">{streak} days</div>
-            <div className="text-[10px] text-orange-300 font-semibold">
-              Active Run
-            </div>
-          </div>
-        </div>
+        <StreakBadge />
 
         <div className="flex items-center gap-3">
           <div className="flex h-11 w-11 items-center justify-center rounded-lg bg-slate-900 border border-slate-700">

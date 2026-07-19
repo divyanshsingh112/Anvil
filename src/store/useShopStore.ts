@@ -35,6 +35,7 @@ interface ShopStore {
   fetchShopItems: () => Promise<void>;
   buyItem: (itemId: string) => Promise<void>;
   equipItem: (itemId: string) => Promise<void>;
+  consumeFreezeItem: () => Promise<void>;
   fetchInventory: () => Promise<void>;
 }
 
@@ -182,6 +183,32 @@ export const useShopStore = create<ShopStore>((set, get) => ({
       const errorObj = err as Error;
       set({ error: errorObj.message });
       throw err;
+    }
+  },
+
+  consumeFreezeItem: async () => {
+    set({ isLoading: true, error: null });
+    try {
+      const res = await fetch("/api/shop/use-freeze", {
+        method: "POST",
+      });
+
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}));
+        throw new Error(errData.error || "Failed to use streak freeze");
+      }
+
+      // Sync user stats
+      await useUserStore.getState().fetchUserStats();
+      // Sync shop inventory and items
+      await get().fetchInventory();
+      await get().fetchShopItems();
+    } catch (err) {
+      const errorObj = err as Error;
+      set({ error: errorObj.message });
+      throw err;
+    } finally {
+      set({ isLoading: false });
     }
   },
 

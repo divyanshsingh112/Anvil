@@ -3,6 +3,8 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
+import { checkAndApplyStreakDecayAndRecharge } from "@/lib/streak-decay";
+
 export const dynamic = "force-dynamic";
 
 export async function GET() {
@@ -12,16 +14,8 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.user.findUnique({
-      where: { id: session.user.id },
-      select: {
-        xp: true,
-        level: true,
-        coins: true,
-        streak: true,
-        longestStreak: true,
-        activeTheme: true,
-      },
+    const user = await prisma.$transaction(async (tx) => {
+      return await checkAndApplyStreakDecayAndRecharge(tx, session.user.id);
     });
 
     if (!user) {
@@ -35,6 +29,9 @@ export async function GET() {
       streak: user.streak,
       longestStreak: user.longestStreak,
       activeTheme: user.activeTheme,
+      streakShieldActive: user.streakShieldActive,
+      freeFreezeCharges: user.freeFreezeCharges,
+      freezeActiveDate: user.freezeActiveDate,
     });
   } catch (error) {
     console.error("GET user stats error:", error);

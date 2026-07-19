@@ -32,7 +32,7 @@ export async function GET() {
 
     // Query user inventory to join owned status
     const inventory = await prisma.inventory.findMany({
-      where: { userId }
+      where: { userId, consumedAt: null }
     });
 
     // Create mappings for fast lookup

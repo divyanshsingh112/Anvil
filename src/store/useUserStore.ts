@@ -16,6 +16,9 @@ export const useUserStore = create<UserState>((set) => ({
   streak: 0,
   longestStreak: 0,
   activeTheme: "default",
+  streakShieldActive: false,
+  freeFreezeCharges: 0,
+  freezeActiveDate: null,
   isLoading: false,
   error: null,
 
@@ -35,6 +38,9 @@ export const useUserStore = create<UserState>((set) => ({
         streak: data.streak,
         longestStreak: data.longestStreak,
         activeTheme: data.activeTheme,
+        streakShieldActive: data.streakShieldActive,
+        freeFreezeCharges: data.freeFreezeCharges,
+        freezeActiveDate: data.freezeActiveDate,
         isLoading: false,
       });
     } catch (err) {
@@ -51,6 +57,9 @@ export const useUserStore = create<UserState>((set) => ({
       streak: data.streak,
       longestStreak: data.longestStreak,
       activeTheme: data.activeTheme,
+      streakShieldActive: data.streakShieldActive,
+      freeFreezeCharges: data.freeFreezeCharges,
+      freezeActiveDate: data.freezeActiveDate,
     });
   },
 }));

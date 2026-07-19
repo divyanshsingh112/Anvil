@@ -24,6 +24,13 @@ model User {
   createdAt     DateTime @default(now())
   lastLoginAt   DateTime?
   password      String?   // nullable — Google users won't have one
+  
+  // Streak protection fields (Phase 10)
+  streakShieldActive Boolean   @default(false)
+  lastShieldRecharge DateTime?
+  freeFreezeCharges  Int       @default(0)
+  freezeActiveDate   DateTime? @db.Date
+
 
   habits            Habit[]
   completions       Completion[]
@@ -116,11 +123,12 @@ model ShopItem {
 // ─── INVENTORY ─────────────────────────────────────────────────────
 
 model Inventory {
-  id          String   @id @default(uuid()) @db.Uuid
-  userId      String   @db.Uuid
-  itemId      String   @db.Uuid
-  purchasedAt DateTime @default(now())
-  isEquipped  Boolean  @default(false)
+  id          String    @id @default(uuid()) @db.Uuid
+  userId      String    @db.Uuid
+  itemId      String    @db.Uuid
+  purchasedAt DateTime  @default(now())
+  isEquipped  Boolean   @default(false)
+  consumedAt  DateTime?
 
   user User     @relation(fields: [userId], references: [id], onDelete: Cascade)
   item ShopItem @relation(fields: [itemId], references: [id], onDelete: Cascade)

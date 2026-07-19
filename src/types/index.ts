@@ -34,6 +34,9 @@ export interface UserGamification {
   streak: number;
   longestStreak: number;
   activeTheme: string;
+  streakShieldActive: boolean;
+  freeFreezeCharges: number;
+  freezeActiveDate: string | null;
 }
 
 export interface ToggleResponse {

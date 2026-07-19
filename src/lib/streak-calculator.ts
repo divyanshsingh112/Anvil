@@ -3,6 +3,7 @@ import { Prisma } from "@prisma/client";
 interface StreakResult {
   newStreak: number;
   changed: boolean;
+  streakShieldActive?: boolean;
 }
 
 /**
@@ -31,11 +32,24 @@ export async function calculateStreakOnCompletion(
     where: { userId, date: yesterday },
   });
 
+  let newStreak = currentStreak;
   if (completedYesterday > 0) {
-    return { newStreak: currentStreak + 1, changed: true };
+    newStreak = currentStreak + 1;
   } else {
-    return { newStreak: 1, changed: true };
+    newStreak = 1;
   }
+
+  // Streak Shield unlock logic (crosses 30 for the first time this cycle)
+  let streakShieldActive = false;
+  if (newStreak >= 30 && currentStreak < 30) {
+    await tx.user.update({
+      where: { id: userId },
+      data: { streakShieldActive: true },
+    });
+    streakShieldActive = true;
+  }
+
+  return { newStreak, changed: true, streakShieldActive };
 }
 
 /**

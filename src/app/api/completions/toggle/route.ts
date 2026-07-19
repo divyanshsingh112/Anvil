@@ -6,6 +6,8 @@ import { XP_PER_COMPLETION, COINS_PER_PERFECT_DAY, calculateLevel } from "@/lib/
 import { calculateStreakOnCompletion, calculateStreakOnUncompletion } from "@/lib/streak-calculator";
 import { Prisma } from "@prisma/client";
 
+import { checkAndApplyStreakDecayAndRecharge } from "@/lib/streak-decay";
+
 export async function POST(request: Request) {
   try {
     const session = await getServerSession(authOptions);
@@ -34,6 +36,9 @@ export async function POST(request: Request) {
 
     // Begin a single Prisma transaction for atomicity and anti-cheat/concurrency safety
     const result = await prisma.$transaction(async (tx) => {
+      // Run decay/recharge checks first so User table is in sync
+      await checkAndApplyStreakDecayAndRecharge(tx, userId);
+
       // 1. Look up habit and verify ownership
       const habit = await tx.habit.findFirst({
         where: { id: habitId, userId },

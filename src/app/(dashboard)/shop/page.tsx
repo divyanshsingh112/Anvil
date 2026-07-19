@@ -13,6 +13,7 @@ export default function ShopPage() {
     fetchShopItems,
     buyItem,
     equipItem,
+    consumeFreezeItem,
     fetchInventory
   } = useShopStore();
 
@@ -22,6 +23,22 @@ export default function ShopPage() {
   const [actionLoadingId, setActionLoadingId] = useState<string | null>(null);
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+
+  const handleUseConsumable = async (item: ShopItemUI) => {
+    setActionLoadingId(item.id);
+    setSuccessMessage(null);
+    setErrorMessage(null);
+    try {
+      await consumeFreezeItem();
+      setSuccessMessage(`Applied ${item.name}! Your streak is protected for today.`);
+      setTimeout(() => setSuccessMessage(null), 4000);
+    } catch (err) {
+      const errorObj = err as Error;
+      setErrorMessage(errorObj.message || "Failed to use item");
+    } finally {
+      setActionLoadingId(null);
+    }
+  };
 
   useEffect(() => {
     fetchShopItems();
@@ -249,14 +266,25 @@ export default function ShopPage() {
                       Active Equipped
                     </button>
                   ) : item.owned ? (
-                    <button
-                      onClick={() => handleEquip(item)}
-                      disabled={isActionLoading}
-                      className="w-full rounded-lg py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.99] disabled:opacity-50"
-                      style={{ backgroundColor: "var(--accent-teal)" }}
-                    >
-                      {isActionLoading ? "Equipping..." : "Equip"}
-                    </button>
+                    item.type === "consumable" ? (
+                      <button
+                        onClick={() => handleUseConsumable(item)}
+                        disabled={isActionLoading}
+                        className="w-full rounded-lg py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.99] disabled:opacity-50"
+                        style={{ backgroundColor: "var(--accent-teal)" }}
+                      >
+                        {isActionLoading ? "Applying..." : "Use"}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={() => handleEquip(item)}
+                        disabled={isActionLoading}
+                        className="w-full rounded-lg py-2.5 text-sm font-bold text-white transition-opacity hover:opacity-90 active:scale-[0.99] disabled:opacity-50"
+                        style={{ backgroundColor: "var(--accent-teal)" }}
+                      >
+                        {isActionLoading ? "Equipping..." : "Equip"}
+                      </button>
+                    )
                   ) : (
                     <div className="relative group">
                       <button
