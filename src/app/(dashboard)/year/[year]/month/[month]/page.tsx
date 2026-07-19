@@ -11,6 +11,7 @@ import Breadcrumb from "@/components/shared/Breadcrumb";
 import Heatmap from "@/components/dashboard/Heatmap";
 import MonthStats from "@/components/dashboard/MonthStats";
 import StreakBadge from "@/components/gamification/StreakBadge";
+import AchievementToast from "@/components/gamification/AchievementToast";
 import { Habit } from "@/types";
 import { Plus, Coins, Trophy, Flame } from "lucide-react";
 import confetti from "canvas-confetti";
@@ -66,6 +67,12 @@ export default function MonthTrackerPage() {
     habitId: string;
     completed: boolean;
   } | null>(null);
+  const [unlockedAchievements, setUnlockedAchievements] = useState<{
+    key: string;
+    name: string;
+    xpReward: number;
+    icon: string;
+  }[]>([]);
 
   // Custom toast notification state
   const [toastMessage, setToastMessage] = useState<string | null>(null);
@@ -133,6 +140,10 @@ export default function MonthTrackerPage() {
     try {
       const response = await toggleCompletion(habitId, completed, options);
       if (response) {
+        if (response.newAchievements && response.newAchievements.length > 0) {
+          setUnlockedAchievements(response.newAchievements);
+        }
+        
         if (response.leveledUp) {
           confetti({
             particleCount: 150,
@@ -386,6 +397,14 @@ export default function MonthTrackerPage() {
 
       {/* Session Time Briefing Prompt Dialog/Overlay */}
       {promptOpen && <SessionTimePrompt onResolve={handlePromptResolve} />}
+
+      {/* Achievement Unlocked Toast Overlay */}
+      {unlockedAchievements.length > 0 && (
+        <AchievementToast
+          achievements={unlockedAchievements}
+          onClose={() => setUnlockedAchievements([])}
+        />
+      )}
     </main>
   );
 }

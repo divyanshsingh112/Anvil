@@ -126,6 +126,43 @@ async function main() {
     }
   }
 
+  const achievements = [
+    { key: "streak_3", name: "3-Day Streak", description: "Maintain a quest streak of 3 consecutive days.", xpReward: 20, icon: "Flame" },
+    { key: "streak_7", name: "7-Day Streak", description: "Maintain a quest streak of 7 consecutive days.", xpReward: 50, icon: "Trophy" },
+    { key: "streak_30", name: "30-Day Streak", description: "Maintain a quest streak of 30 consecutive days.", xpReward: 150, icon: "Shield" },
+    { key: "first_levelup", name: "First Level Up", description: "Ascend to Level 2.", xpReward: 25, icon: "Sparkles" },
+    { key: "level_10", name: "Level 10", description: "Ascend to Level 10.", xpReward: 100, icon: "Crown" },
+    { key: "level_25", name: "Level 25", description: "Ascend to Level 25.", xpReward: 250, icon: "Swords" },
+    { key: "perfect_week", name: "Perfect Week", description: "Complete all daily active quests for 7 consecutive days.", xpReward: 100, icon: "CalendarCheck" },
+    { key: "chain_master", name: "Chain Master", description: "Complete any quest chain 10 times.", xpReward: 100, icon: "Link" },
+    { key: "rival_winner", name: "Rival Winner", description: "Defeat your first rival in a duel.", xpReward: 50, icon: "Award" },
+    { key: "rival_dominator", name: "Rival Dominator", description: "Defeat rivals in 5 duels.", xpReward: 200, icon: "Trophy" },
+    { key: "iron_mage", name: "Iron Mage", description: "Log 100 completed Mage-class quests.", xpReward: 100, icon: "Sparkles" },
+    { key: "iron_warrior", name: "Iron Warrior", description: "Log 100 completed Warrior-class quests.", xpReward: 100, icon: "Sword" },
+    { key: "iron_rogue", name: "Iron Rogue", description: "Log 100 completed Rogue-class quests.", xpReward: 100, icon: "Zap" },
+    { key: "momentum_100", name: "Perfect Momentum", description: "Maintain a perfect momentum score of 100.", xpReward: 50, icon: "Flame" },
+    { key: "comeback_kid", name: "Comeback Kid", description: "Recover momentum score from below 20 back above 60.", xpReward: 75, icon: "ShieldAlert" }
+  ];
+
+  for (const ach of achievements) {
+    const existing = await prisma.achievement.findUnique({
+      where: { key: ach.key }
+    });
+
+    if (existing) {
+      await prisma.achievement.update({
+        where: { key: ach.key },
+        data: ach
+      });
+      console.log(`Updated achievement: ${ach.key}`);
+    } else {
+      const created = await prisma.achievement.create({
+        data: ach
+      });
+      console.log(`Created achievement: ${ach.key} with ID: ${created.id}`);
+    }
+  }
+
   console.log("Seeding complete!");
   await prisma.$disconnect();
   await pool.end();

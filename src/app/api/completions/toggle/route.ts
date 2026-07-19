@@ -7,6 +7,7 @@ import { calculateStreakOnCompletion, calculateStreakOnUncompletion } from "@/li
 import { Prisma } from "@prisma/client";
 
 import { checkAndApplyStreakDecayAndRecharge } from "@/lib/streak-decay";
+import { checkAchievements } from "@/lib/achievement-checker";
 
 export async function POST(request: Request) {
   try {
@@ -37,7 +38,10 @@ export async function POST(request: Request) {
     // Begin a single Prisma transaction for atomicity and anti-cheat/concurrency safety
     const result = await prisma.$transaction(async (tx) => {
       // Run decay/recharge checks first so User table is in sync
-      await checkAndApplyStreakDecayAndRecharge(tx, userId);
+      const initialUser = await checkAndApplyStreakDecayAndRecharge(tx, userId);
+      if (!initialUser) {
+        throw new Error("USER_NOT_FOUND");
+      }
 
       // 1. Look up habit and verify ownership
       const habit = await tx.habit.findFirst({
@@ -68,7 +72,6 @@ export async function POST(request: Request) {
       let newCoins = user.coins;
       let newStreak = user.streak;
       let newLongestStreak = user.longestStreak;
-      let leveledUp = false;
       let perfectDay = false;
 
       // Map habit difficulty to XP reward
@@ -145,10 +148,6 @@ export async function POST(request: Request) {
           // 2. Increment XP
           newXp = newXp + xpReward;
           newLevel = calculateLevel(newXp);
-          if (newLevel > user.level) {
-            leveledUp = true;
-          }
-
           // 3. Recalculate Streak
           const streakCalc = await calculateStreakOnCompletion(tx, userId, today, user.streak);
           newStreak = streakCalc.newStreak;
@@ -254,7 +253,7 @@ export async function POST(request: Request) {
       }
 
       // Update the user record with the new values
-      const updatedUser = await tx.user.update({
+      await tx.user.update({
         where: { id: userId },
         data: {
           xp: newXp,
@@ -265,18 +264,33 @@ export async function POST(request: Request) {
         },
       });
 
+      // 6. Check achievements
+      const newAchievements = await checkAchievements(tx, userId, "completion");
+
+      // Refetch final user record since achievement checks might have updated level/XP
+      const finalUser = await tx.user.findUnique({
+        where: { id: userId }
+      });
+      if (!finalUser) {
+        throw new Error("USER_NOT_FOUND");
+      }
+
       return {
         completion,
         user: {
-          xp: Number(updatedUser.xp),
-          level: updatedUser.level,
-          coins: updatedUser.coins,
-          streak: updatedUser.streak,
-          longestStreak: updatedUser.longestStreak,
-          activeTheme: updatedUser.activeTheme,
+          xp: Number(finalUser.xp),
+          level: finalUser.level,
+          coins: finalUser.coins,
+          streak: finalUser.streak,
+          longestStreak: finalUser.longestStreak,
+          activeTheme: finalUser.activeTheme,
+          streakShieldActive: finalUser.streakShieldActive,
+          freeFreezeCharges: finalUser.freeFreezeCharges,
+          freezeActiveDate: finalUser.freezeActiveDate,
         },
-        leveledUp,
+        leveledUp: finalUser.level > initialUser.level,
         perfectDay,
+        newAchievements,
       };
     });
 

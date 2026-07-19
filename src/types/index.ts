@@ -44,5 +44,11 @@ export interface ToggleResponse {
   user: UserGamification;
   leveledUp: boolean;
   perfectDay: boolean;
+  newAchievements?: {
+    key: string;
+    name: string;
+    xpReward: number;
+    icon: string;
+  }[];
 }
 
