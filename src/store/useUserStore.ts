@@ -15,6 +15,7 @@ export const useUserStore = create<UserState>((set) => ({
   coins: 0,
   streak: 0,
   longestStreak: 0,
+  activeTheme: "default",
   isLoading: false,
   error: null,
 
@@ -33,6 +34,7 @@ export const useUserStore = create<UserState>((set) => ({
         coins: data.coins,
         streak: data.streak,
         longestStreak: data.longestStreak,
+        activeTheme: data.activeTheme,
         isLoading: false,
       });
     } catch (err) {
@@ -48,6 +50,7 @@ export const useUserStore = create<UserState>((set) => ({
       coins: data.coins,
       streak: data.streak,
       longestStreak: data.longestStreak,
+      activeTheme: data.activeTheme,
     });
   },
 }));

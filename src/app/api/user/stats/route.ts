@@ -20,6 +20,7 @@ export async function GET() {
         coins: true,
         streak: true,
         longestStreak: true,
+        activeTheme: true,
       },
     });
 
@@ -33,6 +34,7 @@ export async function GET() {
       coins: user.coins,
       streak: user.streak,
       longestStreak: user.longestStreak,
+      activeTheme: user.activeTheme,
     });
   } catch (error) {
     console.error("GET user stats error:", error);

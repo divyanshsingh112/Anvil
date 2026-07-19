@@ -33,6 +33,7 @@ export interface UserGamification {
   coins: number;
   streak: number;
   longestStreak: number;
+  activeTheme: string;
 }
 
 export interface ToggleResponse {

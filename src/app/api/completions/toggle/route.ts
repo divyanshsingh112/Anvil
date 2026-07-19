@@ -268,6 +268,7 @@ export async function POST(request: Request) {
           coins: updatedUser.coins,
           streak: updatedUser.streak,
           longestStreak: updatedUser.longestStreak,
+          activeTheme: updatedUser.activeTheme,
         },
         leveledUp,
         perfectDay,
