@@ -161,6 +161,7 @@ export default function MonthTrackerPage() {
           setTimeout(() => setToastMessage(null), 5500);
         }
       }
+      return response;
     } catch (err) {
       const errorObj = err as Error;
       alert(errorObj.message || "Failed to toggle completion");

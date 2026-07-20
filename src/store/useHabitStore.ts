@@ -40,6 +40,7 @@ interface HabitStore {
       customCompletedAt?: string;
     }
   ) => Promise<ToggleResponse | undefined>;
+  updateCompletionNote: (completionId: string, note: string | null) => void;
 }
 
 export const useHabitStore = create<HabitStore>((set, get) => ({
@@ -282,5 +283,19 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
       set({ error: errorObj.message });
       throw err;
     }
+  },
+  updateCompletionNote: (completionId, note) => {
+    set((state) => ({
+      habits: state.habits.map((h) => {
+        const completions = h.completions || [];
+        if (!completions.some((c) => c.id === completionId)) return h;
+        return {
+          ...h,
+          completions: completions.map((c) =>
+            c.id === completionId ? { ...c, note } : c
+          ),
+        };
+      }),
+    }));
   },
 }));

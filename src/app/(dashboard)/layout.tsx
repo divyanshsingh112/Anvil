@@ -4,7 +4,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useEffect } from "react";
-import { Swords, ShoppingBag, Trophy, User, Coins } from "lucide-react";
+import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen } from "lucide-react";
 
 export default function DashboardLayout({
   children,
@@ -20,6 +20,7 @@ export default function DashboardLayout({
 
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: Swords },
+    { label: "Journal", href: "/journal", icon: BookOpen },
     { label: "Shop", href: "/shop", icon: ShoppingBag },
     { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
     { label: "Profile", href: "/profile", icon: User },

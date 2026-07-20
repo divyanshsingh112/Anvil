@@ -1,6 +1,6 @@
 "use client";
 
-import { Habit } from "@/types";
+import { Habit, ToggleResponse } from "@/types";
 import HabitCard from "./HabitCard";
 
 interface HabitListProps {
@@ -16,7 +16,7 @@ interface HabitListProps {
       timeAccuracy?: "confirmed" | "estimated" | "skip";
       customCompletedAt?: string;
     }
-  ) => Promise<void>;
+  ) => Promise<ToggleResponse | undefined>;
   isTodayPeriod: boolean;
 }
 
