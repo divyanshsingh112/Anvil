@@ -1,4 +1,5 @@
 import { prisma } from "@/lib/prisma";
+import { calculateCompletionRate } from "@/lib/completion-rate";
 
 export interface WeeklyReportCardResult {
   tier: "elite" | "building" | "steady" | "reset";
@@ -34,78 +35,20 @@ const MESSAGES = {
 
 /**
  * Calculates the weekly report card for the given user for the last 7 calendar days.
- * Employs the same logic as Phase 7 to calculate possible completions.
+ *
+ * Uses the shared calculateCompletionRate utility (lib/completion-rate.ts)
+ * which respects activeDays, createdAt, and archivedAt for fair denominator.
  */
 export async function calculateWeeklyReportCard(userId: string): Promise<WeeklyReportCardResult> {
   const now = new Date();
   const today = new Date(Date.UTC(now.getFullYear(), now.getMonth(), now.getDate()));
   const startDate = new Date(today.getTime() - 6 * 24 * 60 * 60 * 1000);
 
-  // 1. Fetch all user habits that are not archived or were archived inside the 7-day window
-  const habits = await prisma.habit.findMany({
-    where: {
-      userId,
-      createdAt: { lte: today },
-      OR: [
-        { archivedAt: null },
-        { archivedAt: { gte: startDate } }
-      ]
-    }
-  });
+  // Delegate to shared utility
+  const result = await calculateCompletionRate(prisma, userId, startDate, today);
+  const percentage = result.percentage;
 
-  // 2. Count completions inside the 7-day window
-  const completionsCount = await prisma.completion.count({
-    where: {
-      userId,
-      date: {
-        gte: startDate,
-        lte: today
-      }
-    }
-  });
-
-  // 3. Compute total possible completions
-  let totalPossible = 0;
-
-  for (let i = 0; i < 7; i++) {
-    const currentDay = new Date(startDate.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayOfWeek = currentDay.getUTCDay();
-
-    for (const habit of habits) {
-      const createdDate = new Date(habit.createdAt);
-      // Clean dates to midnight for comparison
-      const habitCreatedMidnight = Date.UTC(createdDate.getFullYear(), createdDate.getMonth(), createdDate.getDate());
-      const currentDayMidnight = currentDay.getTime();
-
-      // Check if habit existed on currentDay
-      if (habitCreatedMidnight > currentDayMidnight) {
-        continue; // Habit didn't exist yet
-      }
-
-      // Check if habit was archived before currentDay
-      if (habit.archivedAt) {
-        const archivedDate = new Date(habit.archivedAt);
-        const archivedMidnight = Date.UTC(archivedDate.getFullYear(), archivedDate.getMonth(), archivedDate.getDate());
-        if (archivedMidnight < currentDayMidnight) {
-          continue; // Habit was already archived
-        }
-      }
-
-      // Check if habit was active on this day of week
-      if (habit.activeDays && habit.activeDays.length > 0) {
-        if (!habit.activeDays.includes(dayOfWeek)) {
-          continue; // Not active on this weekday
-        }
-      }
-
-      totalPossible++;
-    }
-  }
-
-  // 4. Compute success percentage
-  const percentage = totalPossible > 0 ? Math.round((completionsCount / totalPossible) * 100) : 0;
-
-  // 5. Map to tier
+  // Map to tier
   let tier: "elite" | "building" | "steady" | "reset";
   let tierLabel: string;
   let icon: string;
@@ -147,3 +90,4 @@ export async function calculateWeeklyReportCard(userId: string): Promise<WeeklyR
     color
   };
 }
+

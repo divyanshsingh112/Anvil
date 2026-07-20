@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ComponentType } from "react";
+import React, { useEffect, useState, ComponentType } from "react";
 import * as Icons from "lucide-react";
 import { Loader2, Award } from "lucide-react";
 
@@ -74,7 +74,7 @@ export default function WeeklyReportCard() {
     );
   }
 
-  const IconComponent = (Icons as Record<string, ComponentType<{ className?: string }>>)[report.icon] || Award;
+  const IconComponent = (Icons as unknown as Record<string, ComponentType<{ className?: string; style?: React.CSSProperties }>>)[report.icon] || Award;
 
   return (
     <div

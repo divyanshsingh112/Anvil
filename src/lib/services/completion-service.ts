@@ -3,6 +3,7 @@ import { XP_PER_COMPLETION, COINS_PER_PERFECT_DAY, calculateLevel } from "@/lib/
 import { calculateStreakOnCompletion, calculateStreakOnUncompletion } from "@/lib/streak-calculator";
 import { checkAndApplyStreakDecayAndRecharge } from "@/lib/streak-decay";
 import { checkAchievements, UnlockedAchievement } from "@/lib/achievement-checker";
+import { calculateAttributeScores } from "@/lib/attribute-calculator";
 
 export interface ProcessToggleResult {
   completion: Completion | null;
@@ -167,6 +168,9 @@ export async function processCompletionToggle(
 
       // Update UserStats table
       await updateUserStatsOnCompletion(tx, userId, habit.class, today, perfectDay);
+
+      // Recalculate attribute scores (uses data already in the transaction)
+      await recalculateAttributeScores(tx, userId, newStreak, newLongestStreak);
     }
   } else {
     // Toggle incomplete (un-toggle)
@@ -206,6 +210,9 @@ export async function processCompletionToggle(
 
     // Update UserStats counter (decrement)
     await updateUserStatsOnUncompletion(tx, userId, habit.class);
+
+    // Recalculate attribute scores after decrement
+    await recalculateAttributeScores(tx, userId, newStreak, user.longestStreak);
   }
 
   // Save the updated user values
@@ -354,4 +361,47 @@ async function updateUserStatsOnUncompletion(
       },
     });
   }
+}
+
+/**
+ * Recalculates STR/INT/WIS/CHA attribute scores on UserStats.
+ *
+ * Uses data already present in the transaction (class completion counters
+ * from UserStats, streak data from the User record). No new expensive queries.
+ */
+async function recalculateAttributeScores(
+  tx: Prisma.TransactionClient,
+  userId: string,
+  currentStreak: number,
+  longestStreak: number
+): Promise<void> {
+  const stats = await tx.userStats.findUnique({
+    where: { userId },
+  });
+
+  if (!stats) return;
+
+  const scores = calculateAttributeScores({
+    warriorCompletions: stats.warriorCompletions,
+    mageCompletions: stats.mageCompletions,
+    rogueCompletions: stats.rogueCompletions,
+    totalCompletions: stats.totalCompletions,
+    streak: currentStreak,
+    longestStreak,
+    // Overall completion rate is expensive to compute here (needs habit query).
+    // For the in-transaction update, we use a simplified estimate based on
+    // the data we have. The /api/user/attributes endpoint computes the
+    // accurate rate when the radar chart is loaded.
+    overallCompletionRate: 50, // neutral default — CHA is a placeholder anyway
+  });
+
+  await tx.userStats.update({
+    where: { userId },
+    data: {
+      strScore: scores.strScore,
+      intScore: scores.intScore,
+      wisScore: scores.wisScore,
+      chaScore: scores.chaScore,
+    },
+  });
 }

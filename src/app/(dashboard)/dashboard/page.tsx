@@ -4,6 +4,8 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { Calendar, ChevronRight, Swords } from "lucide-react";
 import WeeklyReportCard from "@/components/dashboard/WeeklyReportCard";
+import ClassRadarChart from "@/components/dashboard/ClassRadarChart";
+import ConsistencyTrendChart from "@/components/dashboard/ConsistencyTrendChart";
 
 interface YearSummary {
   year: number;
@@ -59,6 +61,12 @@ export default function DashboardPage() {
 
       {/* Weekly Report Card Widget */}
       <WeeklyReportCard />
+
+      {/* Analytics Charts — Class Radar + Consistency Trend */}
+      <div className="grid gap-6 md:grid-cols-2">
+        <ClassRadarChart />
+        <ConsistencyTrendChart />
+      </div>
 
       {/* Error */}
       {error && (

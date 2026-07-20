@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { calculateCompletionRate } from "@/lib/completion-rate";
 
 export const dynamic = "force-dynamic";
 
@@ -10,7 +11,8 @@ export const dynamic = "force-dynamic";
  * Returns success rate, total completions, and total possible
  * for the given month.
  *
- * Respects activeDays and createdAt for fair denominator calculation.
+ * Delegates to the shared calculateCompletionRate utility which
+ * respects activeDays, createdAt, and archivedAt for fair denominator.
  */
 export async function GET(request: Request) {
   try {
@@ -41,74 +43,29 @@ export async function GET(request: Request) {
     }
 
     const userId = session.user.id;
-    const now = new Date();
-    const currentYear = now.getFullYear();
-    const currentMonth = now.getMonth() + 1;
-    const today = now.getDate();
 
-    // Fetch active habits for this month
-    const habits = await prisma.habit.findMany({
-      where: { userId, year, month, archivedAt: null },
-      select: {
-        id: true,
-        activeDays: true,
-        createdAt: true,
-      },
-    });
-
-    // Count completions for this month
-    const startDate = new Date(year, month - 1, 1);
-    const endDate = new Date(year, month, 1);
-    const completionCount = await prisma.completion.count({
-      where: {
-        userId,
-        date: { gte: startDate, lt: endDate },
-      },
-    });
-
-    // Calculate total possible completions (denominator)
+    // Month boundaries (inclusive start, inclusive end)
+    const startDate = new Date(Date.UTC(year, month - 1, 1));
     const daysInMonth = new Date(year, month, 0).getDate();
-    const endDay =
-      year === currentYear && month === currentMonth ? today : daysInMonth;
+    const endDate = new Date(Date.UTC(year, month - 1, daysInMonth));
 
-    let totalPossible = 0;
+    const result = await calculateCompletionRate(
+      prisma,
+      userId,
+      startDate,
+      endDate
+    );
 
-    for (const habit of habits) {
-      const createdDate = new Date(habit.createdAt);
-      let startDay = 1;
-      if (
-        createdDate.getFullYear() === year &&
-        createdDate.getMonth() + 1 === month
-      ) {
-        startDay = createdDate.getDate();
-      }
-
-      for (let day = startDay; day <= endDay; day++) {
-        const date = new Date(year, month - 1, day);
-        const dow = date.getDay();
-
-        if (
-          habit.activeDays &&
-          habit.activeDays.length > 0 &&
-          !habit.activeDays.includes(dow)
-        ) {
-          continue;
-        }
-
-        totalPossible++;
-      }
-    }
-
-    const successRate =
-      totalPossible > 0
-        ? Math.round((completionCount / totalPossible) * 100)
-        : 0;
+    // Count habits for this specific month (for backward-compat response shape)
+    const habitCount = await prisma.habit.count({
+      where: { userId, year, month, archivedAt: null },
+    });
 
     return NextResponse.json({
-      completions: completionCount,
-      totalPossible,
-      successRate,
-      habitCount: habits.length,
+      completions: result.completions,
+      totalPossible: result.totalPossible,
+      successRate: result.percentage,
+      habitCount,
     });
   } catch (error) {
     console.error("GET completions/month-stats error:", error);
