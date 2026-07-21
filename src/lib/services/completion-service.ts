@@ -21,6 +21,11 @@ export interface ProcessToggleResult {
   leveledUp: boolean;
   perfectDay: boolean;
   newAchievements: UnlockedAchievement[];
+  chainCompleted: {
+    chainId: string;
+    chainName: string;
+    bonusXp: number;
+  } | null;
 }
 
 /**
@@ -38,6 +43,8 @@ export async function processCompletionToggle(
     customCompletedAt?: string | null;
   }
 ): Promise<ProcessToggleResult> {
+  let chainCompleted: { chainId: string; chainName: string; bonusXp: number } | null = null;
+
   // 1. Run lazy streak decay/recharge first so User table is in sync
   const initialUser = await checkAndApplyStreakDecayAndRecharge(tx, userId);
   if (!initialUser) {
@@ -149,6 +156,13 @@ export async function processCompletionToggle(
         },
       });
 
+      // Query today's completions *once* to get all completed habit IDs
+      const todayCompletions = await tx.completion.findMany({
+        where: { userId, date: today },
+        select: { habitId: true },
+      });
+      const completedHabitIds = new Set(todayCompletions.map((c) => c.habitId));
+
       // Increment XP
       newXp = newXp + xpReward;
       newLevel = calculateLevel(newXp);
@@ -160,8 +174,42 @@ export async function processCompletionToggle(
         newLongestStreak = newStreak;
       }
 
-      // Check perfect day bonus
-      perfectDay = await checkPerfectDayCondition(tx, userId, today, currentDayOfWeek);
+      // Check Quest Chains completion (avoid re-awarding if already completed today)
+      const userChains = await tx.questChain.findMany({
+        where: { userId },
+      });
+      const matchingChains = userChains.filter((c) => c.habitIds.includes(habitId));
+
+      for (const chain of matchingChains) {
+        const alreadyCompletedToday = chain.lastCompletedDay &&
+          new Date(chain.lastCompletedDay).getTime() === today.getTime();
+
+        if (alreadyCompletedToday) {
+          continue;
+        }
+
+        const allHabitsCompleted = chain.habitIds.every((id) => completedHabitIds.has(id));
+
+        if (allHabitsCompleted) {
+          newXp = newXp + chain.bonusXp;
+          newLevel = calculateLevel(newXp);
+
+          await tx.questChain.update({
+            where: { id: chain.id },
+            data: { lastCompletedDay: today },
+          });
+
+          chainCompleted = {
+            chainId: chain.id,
+            chainName: chain.name,
+            bonusXp: chain.bonusXp,
+          };
+          break;
+        }
+      }
+
+      // Check perfect day bonus (reusing the loaded completions set)
+      perfectDay = await checkPerfectDayCondition(tx, userId, today, currentDayOfWeek, completedHabitIds);
       if (perfectDay) {
         newCoins = newCoins + COINS_PER_PERFECT_DAY;
       }
@@ -192,6 +240,7 @@ export async function processCompletionToggle(
         leveledUp: false,
         perfectDay: false,
         newAchievements: [],
+        chainCompleted: null,
       };
     }
 
@@ -254,6 +303,7 @@ export async function processCompletionToggle(
     leveledUp: finalUser.level > initialUser.level,
     perfectDay,
     newAchievements,
+    chainCompleted,
   };
 }
 
@@ -264,7 +314,8 @@ async function checkPerfectDayCondition(
   tx: Prisma.TransactionClient,
   userId: string,
   today: Date,
-  currentDayOfWeek: number
+  currentDayOfWeek: number,
+  completedHabitIds: Set<string>
 ): Promise<boolean> {
   const stats = await tx.userStats.findUnique({
     where: { userId },
@@ -292,14 +343,9 @@ async function checkPerfectDayCondition(
     return !h.activeDays || h.activeDays.length === 0 || h.activeDays.includes(currentDayOfWeek);
   });
 
-  // Count today's completions (includes the one we just wrote)
-  const todayCompletionsCount = await tx.completion.count({
-    where: { userId, date: today },
-  });
-
   return (
     todayScheduledHabits.length > 0 &&
-    todayCompletionsCount === todayScheduledHabits.length
+    completedHabitIds.size === todayScheduledHabits.length
   );
 }
 

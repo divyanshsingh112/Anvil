@@ -1,12 +1,14 @@
 "use client";
 
 import { useHabitStore } from "@/store/useHabitStore";
+import { useLabels } from "@/hooks/useLabels";
 
 interface SessionTimePromptProps {
   onResolve: () => void;
 }
 
 export default function SessionTimePrompt({ onResolve }: SessionTimePromptProps) {
+  const labels = useLabels();
   const { setSessionTimeBucket } = useHabitStore();
 
   const handleSelect = (bucket: "morning" | "afternoon" | "evening" | "night" | null) => {
@@ -37,7 +39,7 @@ export default function SessionTimePrompt({ onResolve }: SessionTimePromptProps)
             className="mt-2 text-sm font-medium"
             style={{ color: "var(--text-secondary)" }}
           >
-            When did you complete most of your quests today?
+            When did you complete most of your {labels.habitPlural.toLowerCase()} today?
           </p>
         </div>
 

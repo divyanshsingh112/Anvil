@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Habit, HabitClass, HabitDifficulty } from "@/types";
 import { useHabitStore } from "@/store/useHabitStore";
 import { Sword, Sparkles, Zap } from "lucide-react";
+import { useLabels } from "@/hooks/useLabels";
 
 interface HabitFormProps {
   mode: "create" | "edit";
@@ -27,11 +28,12 @@ const WEEKDAYS = [
 export default function HabitForm({
   mode,
   initialHabit,
-  onSuccess,
-  onCancel,
   year,
   month,
+  onSuccess,
+  onCancel,
 }: HabitFormProps) {
+  const labels = useLabels();
   const { createHabit, updateHabit } = useHabitStore();
 
   const [name, setName] = useState("");
@@ -111,10 +113,45 @@ export default function HabitForm({
       onSuccess();
     } catch (err) {
       const errorObj = err as Error;
-      setError(errorObj.message || "Failed to save quest");
+      setError(errorObj.message || `Failed to save ${labels.habitSingular.toLowerCase()}`);
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const getFormTitle = () => {
+    if (labels.habitSingular === "Quest") return mode === "create" ? "Forge New Quest" : "Reforge Quest";
+    if (labels.habitSingular === "Lap") return mode === "create" ? "Start New Lap" : "Tune Lap";
+    if (labels.habitSingular === "Drill") return mode === "create" ? "Plan New Drill" : "Review Drill";
+    return mode === "create" ? "Create New Habit" : "Edit Habit";
+  };
+
+  const getClassLabel = () => {
+    if (labels.habitSingular === "Quest") return "Hero Class";
+    if (labels.habitSingular === "Lap") return "Racing Spec";
+    if (labels.habitSingular === "Drill") return "Drill Type";
+    return "Category";
+  };
+
+  const getButtonText = () => {
+    if (labels.habitSingular === "Quest") {
+      return isSubmitting
+        ? (mode === "create" ? "Forging..." : "Reforging...")
+        : (mode === "create" ? "Forge Quest" : "Reforge");
+    }
+    if (labels.habitSingular === "Lap") {
+      return isSubmitting
+        ? (mode === "create" ? "Starting..." : "Tuning...")
+        : (mode === "create" ? "Start Lap" : "Tune");
+    }
+    if (labels.habitSingular === "Drill") {
+      return isSubmitting
+        ? (mode === "create" ? "Planning..." : "Reviewing...")
+        : (mode === "create" ? "Plan Drill" : "Review");
+    }
+    return isSubmitting
+      ? "Saving..."
+      : (mode === "create" ? "Save Habit" : "Save");
   };
 
   return (
@@ -123,7 +160,7 @@ export default function HabitForm({
         className="text-2xl font-bold border-b pb-3"
         style={{ color: "var(--text-primary)", borderColor: "var(--border)" }}
       >
-        {mode === "create" ? "Forge New Quest" : "Reforge Quest"}
+        {getFormTitle()}
       </h2>
 
       {error && (
@@ -146,7 +183,7 @@ export default function HabitForm({
           className="mb-2 block text-sm font-semibold uppercase tracking-wider"
           style={{ color: "var(--text-secondary)" }}
         >
-          Quest Name
+          {labels.habitSingular} Name
         </label>
         <input
           id="questName"
@@ -161,7 +198,7 @@ export default function HabitForm({
             borderColor: "var(--border)",
             color: "var(--text-primary)",
           }}
-          placeholder="e.g. Daily Coding Forge"
+          placeholder={`e.g. Daily ${labels.habitSingular} Practice`}
         />
         <div className="mt-1 text-right text-xs" style={{ color: "var(--text-muted)" }}>
           {name.length}/50
@@ -174,13 +211,13 @@ export default function HabitForm({
           className="mb-2 block text-sm font-semibold uppercase tracking-wider"
           style={{ color: "var(--text-secondary)" }}
         >
-          Hero Class
+          {getClassLabel()}
         </span>
         <div className="grid grid-cols-3 gap-3">
           {[
-            { id: "warrior", label: "Warrior", icon: <Sword className="h-4 w-4" /> },
-            { id: "mage", label: "Mage", icon: <Sparkles className="h-4 w-4" /> },
-            { id: "rogue", label: "Rogue", icon: <Zap className="h-4 w-4" /> },
+            { id: "warrior", label: labels.classWarrior, icon: <Sword className="h-4 w-4" /> },
+            { id: "mage", label: labels.classMage, icon: <Sparkles className="h-4 w-4" /> },
+            { id: "rogue", label: labels.classRogue, icon: <Zap className="h-4 w-4" /> },
           ].map((c) => {
             const isSelected = habitClass === c.id;
             return (
@@ -217,9 +254,9 @@ export default function HabitForm({
         </span>
         <div className="grid grid-cols-3 gap-3">
           {[
-            { id: "novice", label: "Novice" },
-            { id: "adept", label: "Adept" },
-            { id: "master", label: "Master" },
+            { id: "novice", label: labels.difficultyNovice },
+            { id: "adept", label: labels.difficultyAdept },
+            { id: "master", label: labels.difficultyMaster },
           ].map((d) => {
             const isSelected = difficulty === d.id;
             return (
@@ -252,7 +289,7 @@ export default function HabitForm({
             className="text-sm font-semibold uppercase tracking-wider"
             style={{ color: "var(--text-secondary)" }}
           >
-            Quest Schedule
+            {labels.habitSingular} Schedule
           </span>
           <button
             type="button"
@@ -289,7 +326,7 @@ export default function HabitForm({
           })}
         </div>
         <p className="mt-2 text-xs" style={{ color: "var(--text-muted)" }}>
-          * Leaving all days selected logs quest as active daily (null value in database).
+          * Leaving all days selected logs {labels.habitSingular.toLowerCase()} as active daily (null value in database).
         </p>
       </div>
 
@@ -306,16 +343,10 @@ export default function HabitForm({
         <button
           type="submit"
           disabled={isSubmitting}
-          className="rounded-lg px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-90 disabled:opacity-50"
+          className="rounded-lg px-6 py-2.5 text-sm font-semibold text-white transition-opacity hover:opacity-95 disabled:opacity-50"
           style={{ backgroundColor: "var(--accent-purple)" }}
         >
-          {isSubmitting
-            ? mode === "create"
-              ? "Forging..."
-              : "Reforging..."
-            : mode === "create"
-            ? "Forge Quest"
-            : "Reforge"}
+          {getButtonText()}
         </button>
       </div>
     </form>

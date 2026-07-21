@@ -52,21 +52,53 @@ export async function POST(request: Request) {
       );
     }
 
-    // Hash password
-    const hashedPassword = await bcrypt.hash(password, 10);
+    // Execute in a transaction to ensure user and initial inventory are created atomically
+    const user = await prisma.$transaction(async (tx) => {
+      const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create user with default gamification values
-    const user = await prisma.user.create({
-      data: {
-        email,
-        password: hashedPassword,
-        displayName: displayName.trim(),
-        xp: 0,
-        level: 1,
-        coins: 0,
-        streak: 0,
-        momentumScore: 100,
-      },
+      const newUser = await tx.user.create({
+        data: {
+          email,
+          password: hashedPassword,
+          displayName: displayName.trim(),
+          xp: 0,
+          level: 1,
+          coins: 0,
+          streak: 0,
+          momentumScore: 100,
+          activeTheme: "Plain",
+        },
+      });
+
+      // Fetch the free default themes
+      const [plainTheme, rpgTheme] = await Promise.all([
+        tx.shopItem.findFirst({ where: { name: "Plain", type: "theme" } }),
+        tx.shopItem.findFirst({ where: { name: "RPG", type: "theme" } }),
+      ]);
+
+      const inventoryData = [];
+      if (plainTheme) {
+        inventoryData.push({
+          userId: newUser.id,
+          itemId: plainTheme.id,
+          isEquipped: true,
+        });
+      }
+      if (rpgTheme) {
+        inventoryData.push({
+          userId: newUser.id,
+          itemId: rpgTheme.id,
+          isEquipped: false,
+        });
+      }
+
+      if (inventoryData.length > 0) {
+        await tx.inventory.createMany({
+          data: inventoryData,
+        });
+      }
+
+      return newUser;
     });
 
     // Return user WITHOUT password

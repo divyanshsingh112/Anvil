@@ -10,6 +10,7 @@ import {
   ResponsiveContainer,
 } from "recharts";
 import { Loader2, Shield } from "lucide-react";
+import { useLabels } from "@/hooks/useLabels";
 
 interface AttributeData {
   strScore: number;
@@ -18,14 +19,9 @@ interface AttributeData {
   chaScore: number;
 }
 
-interface RadarDataPoint {
-  attribute: string;
-  value: number;
-  fullMark: 100;
-}
-
 export default function ClassRadarChart() {
-  const [data, setData] = useState<RadarDataPoint[] | null>(null);
+  const labels = useLabels();
+  const [attrs, setAttrs] = useState<AttributeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
@@ -39,14 +35,8 @@ export default function ClassRadarChart() {
     try {
       const res = await fetch("/api/user/attributes");
       if (!res.ok) throw new Error("Failed to load attributes");
-      const attrs: AttributeData = await res.json();
-
-      setData([
-        { attribute: "STR", value: attrs.strScore, fullMark: 100 },
-        { attribute: "INT", value: attrs.intScore, fullMark: 100 },
-        { attribute: "WIS", value: attrs.wisScore, fullMark: 100 },
-        { attribute: "CHA", value: attrs.chaScore, fullMark: 100 },
-      ]);
+      const data: AttributeData = await res.json();
+      setAttrs(data);
     } catch (err) {
       const errorObj = err as Error;
       setError(errorObj.message);
@@ -69,7 +59,7 @@ export default function ClassRadarChart() {
     );
   }
 
-  if (error || !data) {
+  if (error || !attrs) {
     return (
       <div
         className="stat-card flex flex-col items-center justify-center"
@@ -82,6 +72,13 @@ export default function ClassRadarChart() {
       </div>
     );
   }
+
+  const chartData = [
+    { attribute: labels.attrStr, value: attrs.strScore, fullMark: 100 },
+    { attribute: labels.attrInt, value: attrs.intScore, fullMark: 100 },
+    { attribute: labels.attrWis, value: attrs.wisScore, fullMark: 100 },
+    { attribute: labels.attrCha, value: attrs.chaScore, fullMark: 100 },
+  ];
 
   return (
     <div className="stat-card" style={{ minHeight: "320px" }}>
@@ -101,14 +98,14 @@ export default function ClassRadarChart() {
             className="text-[10px] font-bold uppercase tracking-wider"
             style={{ color: "var(--text-secondary)" }}
           >
-            Class Attributes
+            {labels.habitSingular === "Quest" ? "Class Attributes" : labels.habitSingular === "Lap" ? "Performance Stats" : labels.habitSingular === "Drill" ? "Skill Attributes" : "Habit Attributes"}
           </span>
         </div>
       </div>
 
       {/* Chart */}
       <ResponsiveContainer width="100%" height={260}>
-        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={data}>
+        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
           <PolarGrid
             stroke="var(--border)"
             strokeOpacity={0.6}
@@ -142,7 +139,7 @@ export default function ClassRadarChart() {
 
       {/* Score Labels */}
       <div className="grid grid-cols-4 gap-2 mt-1">
-        {data.map((d) => (
+        {chartData.map((d) => (
           <div key={d.attribute} className="text-center">
             <div
               className="text-xs font-black"

@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useRouter, useParams } from "next/navigation";
 import Breadcrumb from "@/components/shared/Breadcrumb";
 import { ChevronRight, TrendingUp } from "lucide-react";
+import { useLabels } from "@/hooks/useLabels";
 
 interface MonthStat {
   month: number;
@@ -32,6 +33,7 @@ export default function YearGridPage() {
   const params = useParams();
   const year = parseInt(params.year as string, 10);
   const router = useRouter();
+  const labels = useLabels();
 
   const [monthStats, setMonthStats] = useState<MonthStat[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -95,7 +97,7 @@ export default function YearGridPage() {
           {year} Overview
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-          Monthly breakdown of your quest journey
+          Monthly breakdown of your {labels.habitSingular.toLowerCase()} journey
         </p>
       </div>
 

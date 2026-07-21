@@ -6,6 +6,7 @@ import { Calendar, ChevronRight, Swords } from "lucide-react";
 import WeeklyReportCard from "@/components/dashboard/WeeklyReportCard";
 import ClassRadarChart from "@/components/dashboard/ClassRadarChart";
 import ConsistencyTrendChart from "@/components/dashboard/ConsistencyTrendChart";
+import { useLabels } from "@/hooks/useLabels";
 
 interface YearSummary {
   year: number;
@@ -13,6 +14,7 @@ interface YearSummary {
 }
 
 export default function DashboardPage() {
+  const labels = useLabels();
   const [years, setYears] = useState<YearSummary[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -52,10 +54,10 @@ export default function DashboardPage() {
           className="text-3xl font-extrabold tracking-tight"
           style={{ color: "var(--text-primary)" }}
         >
-          Quest Archive
+          {labels.habitSingular} Archive
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-          Select a year to explore your habit journey
+          Select a year to explore your {labels.habitSingular.toLowerCase()} journey
         </p>
       </div>
 
@@ -100,10 +102,10 @@ export default function DashboardPage() {
             className="text-lg font-semibold"
             style={{ color: "var(--text-secondary)" }}
           >
-            No quest history found
+            No {labels.habitSingular.toLowerCase()} history found
           </p>
           <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-            Start by creating your first habit
+            Start by creating your first {labels.habitSingular.toLowerCase()}
           </p>
         </div>
       ) : (
@@ -166,8 +168,8 @@ export default function DashboardPage() {
                   >
                     {yearData.totalCompletions}{" "}
                     {yearData.totalCompletions === 1
-                      ? "quest completed"
-                      : "quests completed"}
+                      ? `${labels.habitSingular.toLowerCase()} completed`
+                      : `${labels.habitPlural.toLowerCase()} completed`}
                   </span>
                 </div>
               </div>

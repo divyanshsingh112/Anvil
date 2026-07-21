@@ -2,8 +2,10 @@
 
 import { useUserStore } from "@/store/useUserStore";
 import { Flame, Shield, Snowflake } from "lucide-react";
+import { useLabels } from "@/hooks/useLabels";
 
 export default function StreakBadge() {
+  const labels = useLabels();
   const streak = useUserStore((state) => state.streak);
   const streakShieldActive = useUserStore((state) => state.streakShieldActive);
   const freezeActiveDate = useUserStore((state) => state.freezeActiveDate);
@@ -28,7 +30,7 @@ export default function StreakBadge() {
         </div>
         <div>
           <div className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-            Streak
+            {labels.streakLabel}
           </div>
           <div className="text-xl font-black text-white flex items-center gap-1.5">
             {streak} {streak === 1 ? "day" : "days"}

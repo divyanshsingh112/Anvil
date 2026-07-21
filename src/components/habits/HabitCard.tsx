@@ -4,6 +4,7 @@ import { useState, useEffect } from "react";
 import { Habit, ToggleResponse } from "@/types";
 import { Sword, Sparkles, Zap, Edit2, Trash2, Clock, MessageSquare, Check, Loader2 } from "lucide-react";
 import { useHabitStore } from "@/store/useHabitStore";
+import { useLabels } from "@/hooks/useLabels";
 
 interface HabitCardProps {
   habit: Habit;
@@ -30,10 +31,25 @@ export default function HabitCard({
   onToggle,
   isTodayPeriod,
 }: HabitCardProps) {
+  const labels = useLabels();
   const [isToggling, setIsToggling] = useState(false);
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [isSavingNote, setIsSavingNote] = useState(false);
+
+  const getThemedDifficulty = (difficulty: string) => {
+    if (difficulty === "novice") return labels.difficultyNovice;
+    if (difficulty === "adept") return labels.difficultyAdept;
+    if (difficulty === "master") return labels.difficultyMaster;
+    return difficulty;
+  };
+
+  const getThemedClass = (cls: string) => {
+    if (cls === "warrior") return labels.classWarrior;
+    if (cls === "mage") return labels.classMage;
+    if (cls === "rogue") return labels.classRogue;
+    return cls;
+  };
 
   // Check if completed today (based on server current date matching today)
   const now = new Date();
@@ -215,13 +231,13 @@ export default function HabitCard({
               <span
                 className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold uppercase tracking-wider ${getDifficultyColor()}`}
               >
-                {habit.difficulty}
+                {getThemedDifficulty(habit.difficulty)}
               </span>
               <span
                 className="text-xs font-medium uppercase tracking-wide"
                 style={{ color: "var(--text-secondary)" }}
               >
-                {habit.class}
+                {getThemedClass(habit.class)}
               </span>
             </div>
           </div>
@@ -231,14 +247,14 @@ export default function HabitCard({
           <button
             onClick={() => onEdit(habit)}
             className="rounded-lg p-2 transition-colors hover:bg-slate-800"
-            title="Edit Quest"
+            title={`Edit ${labels.habitSingular}`}
           >
             <Edit2 className="h-4 w-4" style={{ color: "var(--text-secondary)" }} />
           </button>
           <button
             onClick={() => onArchive(habit.id)}
             className="rounded-lg p-2 transition-colors hover:bg-red-950/30"
-            title="Archive Quest"
+            title={`Archive ${labels.habitSingular}`}
           >
             <Trash2 className="h-4 w-4" style={{ color: "var(--danger)" }} />
           </button>
@@ -314,7 +330,7 @@ export default function HabitCard({
           {showNoteInput ? (
             <div className="mt-4 pt-3 border-t space-y-2.5" style={{ borderColor: "var(--border)" }}>
               <div className="flex justify-between items-center text-xs">
-                <span className="font-bold text-slate-400">Quest Journal Note</span>
+                <span className="font-bold text-slate-400">{labels.habitSingular} Journal Note</span>
                 <span className={`text-[10px] ${noteText.length >= 100 ? 'text-red-400' : 'text-slate-500'}`}>
                   {noteText.length}/100
                 </span>

@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { Sword, Sparkles, Zap, Loader2, BookOpen, Clock, Calendar } from "lucide-react";
+import { useLabels } from "@/hooks/useLabels";
 
 interface JournalEntry {
   id: string;
@@ -13,6 +14,7 @@ interface JournalEntry {
 }
 
 export default function JournalTimeline() {
+  const labels = useLabels();
   const [entries, setEntries] = useState<JournalEntry[]>([]);
   const [page, setPage] = useState(1);
   const [hasNextPage, setHasNextPage] = useState(false);
@@ -123,7 +125,7 @@ export default function JournalTimeline() {
       <div className="flex flex-col justify-center items-center py-20 gap-3">
         <Loader2 className="h-8 w-8 animate-spin text-purple-500" />
         <span className="text-sm text-slate-400 font-bold uppercase tracking-wider">
-          Reading Quest Logs...
+          Reading {labels.habitSingular} Logs...
         </span>
       </div>
     );
@@ -159,10 +161,10 @@ export default function JournalTimeline() {
       >
         <BookOpen className="h-12 w-12 mb-4 text-slate-500" />
         <p className="text-lg font-bold" style={{ color: "var(--text-secondary)" }}>
-          No journal entries yet
+          No {labels.habitSingular.toLowerCase()} journal entries yet
         </p>
         <p className="text-sm mt-1 max-w-xs" style={{ color: "var(--text-muted)" }}>
-          Add an optional note whenever you complete a quest on your tracker to document your journey here.
+          Add an optional note whenever you complete a {labels.habitSingular.toLowerCase()} on your tracker to document your journey here.
         </p>
       </div>
     );

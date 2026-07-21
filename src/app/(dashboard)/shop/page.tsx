@@ -3,9 +3,11 @@
 import { useEffect, useState } from "react";
 import { useShopStore, ShopItemUI } from "@/store/useShopStore";
 import { useUserStore } from "@/store/useUserStore";
+import { useLabels } from "@/hooks/useLabels";
 import { Coins, ShoppingBag, Check, Sparkles, Flame, ShieldAlert } from "lucide-react";
 
 export default function ShopPage() {
+  const labels = useLabels();
   const {
     items,
     isLoading,
@@ -100,10 +102,10 @@ export default function ShopPage() {
             style={{ color: "var(--text-primary)" }}
           >
             <ShoppingBag className="h-8 w-8 text-purple-400" />
-            Hero&apos;s Market
+            {labels.coinsLabel === "Gold" ? "Hero's Market" : labels.coinsLabel === "Fuel" ? "Paddock Shop" : labels.coinsLabel === "MVP Points" ? "Clubhouse Shop" : "Shop"}
           </h1>
           <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-            Spend your gold coins on cosmetic themes and quest boosters
+            Spend your {labels.coinsLabel.toLowerCase()} on cosmetic themes and {labels.habitSingular.toLowerCase()} boosters
           </p>
         </div>
 

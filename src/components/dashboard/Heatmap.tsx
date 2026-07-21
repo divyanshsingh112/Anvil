@@ -1,6 +1,8 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useLabels } from "@/hooks/useLabels";
+import { TerminologyPack } from "@/lib/themes/terminology";
 
 interface HeatmapProps {
   year: number;
@@ -21,13 +23,14 @@ function getHeatColor(count: number): string {
   return "var(--heat-3)"; // 3+
 }
 
-function getTooltip(count: number): string {
-  if (count === 0) return "No quests completed";
-  if (count === 1) return "1 quest completed";
-  return `${count} quests completed`;
+function getTooltip(count: number, labels: TerminologyPack): string {
+  if (count === 0) return `No ${labels.habitPlural.toLowerCase()} completed`;
+  if (count === 1) return `1 ${labels.habitSingular.toLowerCase()} completed`;
+  return `${count} ${labels.habitPlural.toLowerCase()} completed`;
 }
 
 export default function Heatmap({ year, month }: HeatmapProps) {
+  const labels = useLabels();
   const [data, setData] = useState<HeatmapEntry[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -185,7 +188,7 @@ export default function Heatmap({ year, month }: HeatmapProps) {
                   key={dateStr}
                   className={`heatmap-cell ${isToday ? "heatmap-cell--today" : ""}`}
                   style={{ backgroundColor: getHeatColor(count) }}
-                  title={`${day}: ${getTooltip(count)}`}
+                  title={`${day}: ${getTooltip(count, labels)}`}
                 />
               );
             })}

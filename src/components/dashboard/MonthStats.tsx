@@ -3,6 +3,7 @@
 import { useEffect, useState } from "react";
 import { useUserStore } from "@/store/useUserStore";
 import { Target, Flame, Swords } from "lucide-react";
+import { useLabels } from "@/hooks/useLabels";
 
 interface MonthStatsProps {
   year: number;
@@ -17,6 +18,7 @@ interface StatsData {
 }
 
 export default function MonthStats({ year, month }: MonthStatsProps) {
+  const labels = useLabels();
   const [stats, setStats] = useState<StatsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { streak } = useUserStore();
@@ -106,14 +108,14 @@ export default function MonthStats({ year, month }: MonthStatsProps) {
             className="text-[10px] font-bold uppercase tracking-wider"
             style={{ color: "var(--text-secondary)" }}
           >
-            Current Streak
+            Current {labels.streakLabel}
           </span>
         </div>
         <div className="text-3xl font-black" style={{ color: "var(--text-primary)" }}>
           {streak} <span className="text-base font-semibold" style={{ color: "var(--text-secondary)" }}>days</span>
         </div>
         <p className="text-[11px] mt-1" style={{ color: "var(--text-muted)" }}>
-          {streak > 0 ? "Keep the flame alive!" : "Complete all quests today to start"}
+          {streak > 0 ? "Keep the flame alive!" : `Complete all ${labels.habitPlural.toLowerCase()} today to start`}
         </p>
       </div>
 
@@ -133,7 +135,7 @@ export default function MonthStats({ year, month }: MonthStatsProps) {
             className="text-[10px] font-bold uppercase tracking-wider"
             style={{ color: "var(--text-secondary)" }}
           >
-            Quests Completed
+            {labels.habitPlural} Completed
           </span>
         </div>
         <div className="text-3xl font-black" style={{ color: "var(--text-primary)" }}>

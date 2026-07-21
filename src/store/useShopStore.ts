@@ -68,6 +68,7 @@ export function applyTheme(cssVariables: Record<string, string> | null) {
   }
 
   for (const [key, value] of Object.entries(cssVariables)) {
+    if (key === "terminologyKey") continue;
     document.documentElement.style.setProperty(key, value);
   }
 }

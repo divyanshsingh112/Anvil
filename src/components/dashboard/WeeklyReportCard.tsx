@@ -3,6 +3,7 @@
 import React, { useEffect, useState, ComponentType } from "react";
 import * as Icons from "lucide-react";
 import { Loader2, Award } from "lucide-react";
+import { useLabels } from "@/hooks/useLabels";
 
 interface ReportCardData {
   tier: "elite" | "building" | "steady" | "reset";
@@ -14,6 +15,7 @@ interface ReportCardData {
 }
 
 export default function WeeklyReportCard() {
+  const labels = useLabels();
   const [report, setReport] = useState<ReportCardData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -133,7 +135,7 @@ export default function WeeklyReportCard() {
         style={{ borderColor: "var(--border)" }}
       >
         <span style={{ color: "var(--text-muted)" }}>
-          Weekly Quest Performance (Last 7 Days)
+          Weekly {labels.habitSingular} Performance (Last 7 Days)
         </span>
         <span style={{ color: "var(--text-muted)" }}>
           Updates every Monday

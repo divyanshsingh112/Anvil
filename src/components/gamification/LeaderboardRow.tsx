@@ -1,6 +1,7 @@
 "use client";
 
 import { Crown, Medal, User } from "lucide-react";
+import { useLabels } from "@/hooks/useLabels";
 
 interface LeaderboardUser {
   id: string;
@@ -17,6 +18,7 @@ interface LeaderboardRowProps {
 }
 
 export default function LeaderboardRow({ user, isCurrentUser }: LeaderboardRowProps) {
+  const labels = useLabels();
   const getRankIcon = (rank: number) => {
     if (rank === 1) {
       return <Crown className="h-5 w-5" style={{ color: "#fbbf24" }} />; // Gold Crown
@@ -106,7 +108,7 @@ export default function LeaderboardRow({ user, isCurrentUser }: LeaderboardRowPr
             )}
           </h4>
           <p className="text-[11px] text-slate-500 font-medium">
-            Accumulated XP: {user.xp}
+            Accumulated {labels.xpLabel}: {user.xp}
           </p>
         </div>
       </div>
@@ -120,7 +122,7 @@ export default function LeaderboardRow({ user, isCurrentUser }: LeaderboardRowPr
           color: "var(--text-secondary)",
         }}
       >
-        LVL {user.level}
+        {labels.levelLabel === "Level" ? "LVL" : labels.levelLabel.toUpperCase()} {user.level}
       </div>
     </div>
   );

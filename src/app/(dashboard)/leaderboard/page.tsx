@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import LeaderboardRow from "@/components/gamification/LeaderboardRow";
 import { Trophy, Loader2 } from "lucide-react";
+import { useLabels } from "@/hooks/useLabels";
 
 interface LeaderboardUser {
   id: string;
@@ -16,6 +17,7 @@ interface LeaderboardUser {
 
 export default function LeaderboardPage() {
   const { data: session } = useSession();
+  const labels = useLabels();
   const [leaderboard, setLeaderboard] = useState<LeaderboardUser[]>([]);
   const [currentUser, setCurrentUser] = useState<LeaderboardUser | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,10 +57,10 @@ export default function LeaderboardPage() {
       <div className="border-b pb-6" style={{ borderColor: "var(--border)" }}>
         <h1 className="text-3xl font-extrabold tracking-tight flex items-center gap-2.5 text-white">
           <Trophy className="h-8 w-8 text-yellow-400 animate-pulse shrink-0" />
-          Hall of Heroes
+          {labels.leaderboardLabel === "Leaderboard" ? "Hall of Heroes" : labels.leaderboardLabel}
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
-          Compete globally, complete quests, and claim your place on the leaderboard
+          Compete globally, complete {labels.habitPlural.toLowerCase()}, and claim your place in the {labels.leaderboardLabel.toLowerCase()}
         </p>
       </div>
 

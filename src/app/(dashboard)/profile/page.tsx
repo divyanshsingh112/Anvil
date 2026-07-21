@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { useUserStore } from "@/store/useUserStore";
+import { useLabels } from "@/hooks/useLabels";
 import * as Icons from "lucide-react";
 import { Coins, Flame, Award, User, Loader2 } from "lucide-react";
 import React, { ComponentType } from "react";
@@ -19,6 +20,7 @@ interface AchievementUI {
 
 export default function ProfilePage() {
   const { xp, level, coins, streak, longestStreak, fetchUserStats } = useUserStore();
+  const labels = useLabels();
   const [achievements, setAchievements] = useState<AchievementUI[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -79,17 +81,17 @@ export default function ProfilePage() {
 
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-2xl font-black md:text-3xl text-white tracking-tight">
-              Hero Profile
+              {labels.levelLabel} Profile
             </h1>
             <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-              Level {level} Questing Champion
+              {labels.levelLabel} {level} {labels.habitSingular} Champion
             </p>
 
             {/* Level XP Progress Bar */}
             <div className="mt-4 max-w-md mx-auto md:mx-0">
               <div className="flex justify-between text-xs font-semibold mb-1">
-                <span>XP Progress</span>
-                <span>{xp % 100} / 100 XP</span>
+                <span>{labels.xpLabel} Progress</span>
+                <span>{xp % 100} / 100 {labels.xpLabel}</span>
               </div>
               <div
                 className="w-full h-2 rounded-full overflow-hidden"
@@ -108,7 +110,7 @@ export default function ProfilePage() {
 
           {/* User Gamification Counters */}
           <div className="flex flex-wrap gap-4 justify-center">
-            {/* Coins */}
+             {/* Coins */}
             <div
               className="flex items-center gap-3 px-4 py-3 rounded-xl border min-w-[110px]"
               style={{
@@ -119,7 +121,7 @@ export default function ProfilePage() {
               <Coins className="h-5 w-5 text-yellow-500" />
               <div>
                 <div className="text-[10px] uppercase font-bold text-slate-500">
-                  Gold Coins
+                  {labels.coinsLabel}
                 </div>
                 <div className="text-base font-extrabold text-yellow-400">
                   {coins}
@@ -138,7 +140,7 @@ export default function ProfilePage() {
               <Flame className="h-5 w-5 text-orange-500" />
               <div>
                 <div className="text-[10px] uppercase font-bold text-slate-500">
-                  Current Streak
+                  Current {labels.streakLabel}
                 </div>
                 <div className="text-base font-extrabold text-orange-400">
                   {streak} days
@@ -157,7 +159,7 @@ export default function ProfilePage() {
               <Award className="h-5 w-5 text-teal-500" />
               <div>
                 <div className="text-[10px] uppercase font-bold text-slate-500">
-                  Max Streak
+                  Max {labels.streakLabel}
                 </div>
                 <div className="text-base font-extrabold text-teal-400">
                   {longestStreak} days
@@ -177,7 +179,7 @@ export default function ProfilePage() {
               Achievements Gallery
             </h2>
             <p className="text-xs" style={{ color: "var(--text-muted)" }}>
-              Earn achievements to boost your Level XP and unlock prestige.
+              Earn achievements to boost your {labels.levelLabel} {labels.xpLabel} and unlock prestige.
             </p>
           </div>
           <div

@@ -29,6 +29,94 @@ async function main() {
 
   const items = [
     {
+      name: "Plain",
+      type: "theme",
+      priceCoins: 0,
+      description: "A neutral, everyday styling theme.",
+      cssVariables: {
+        "terminologyKey": "plain",
+        "--bg-primary": "#0c0e12",
+        "--bg-secondary": "#171a21",
+        "--bg-tertiary": "#242933",
+        "--border": "#3b4252",
+        "--accent-purple": "#7c3aed",
+        "--accent-teal": "#0d9488",
+        "--accent-gold": "#d97706",
+        "--text-primary": "#f8fafc",
+        "--text-secondary": "#94a3b8",
+        "--text-muted": "#64748b"
+      },
+      isLimited: false
+    },
+    {
+      name: "RPG",
+      type: "theme",
+      priceCoins: 0,
+      description: "A fantasy tabletop role-playing aesthetic.",
+      cssVariables: {
+        "terminologyKey": "rpg",
+        "--bg-primary": "#0f172a",
+        "--bg-secondary": "#1e293b",
+        "--bg-tertiary": "#334155",
+        "--border": "#475569",
+        "--accent-purple": "#a855f7",
+        "--accent-teal": "#14b8a6",
+        "--accent-gold": "#fbbf24",
+        "--text-primary": "#f8fafc",
+        "--text-secondary": "#cbd5e1",
+        "--text-muted": "#64748b"
+      },
+      isLimited: false
+    },
+    {
+      name: "Racing",
+      type: "theme",
+      priceCoins: 300,
+      description: "A high-octane theme with checkered flags.",
+      cssVariables: {
+        "terminologyKey": "racing",
+        "--bg-primary": "#0b0c10",
+        "--bg-secondary": "#16171d",
+        "--bg-tertiary": "#22242f",
+        "--border": "#313543",
+        "--accent-purple": "#dc2626",
+        "--accent-teal": "#ef4444",
+        "--accent-gold": "#f59e0b",
+        "--text-primary": "#f8fafc",
+        "--text-secondary": "#94a3b8",
+        "--text-muted": "#64748b",
+        "--heat-0": "#16171d",
+        "--heat-1": "#7f1d1d",
+        "--heat-2": "#b91c1c",
+        "--heat-3": "#ef4444"
+      },
+      isLimited: false
+    },
+    {
+      name: "Sports",
+      type: "theme",
+      priceCoins: 250,
+      description: "A classic athletic theme in green and gold.",
+      cssVariables: {
+        "terminologyKey": "sports",
+        "--bg-primary": "#091c15",
+        "--bg-secondary": "#112e23",
+        "--bg-tertiary": "#1d4435",
+        "--border": "#285e49",
+        "--accent-purple": "#10b981",
+        "--accent-teal": "#22c55e",
+        "--accent-gold": "#fbbf24",
+        "--text-primary": "#f0fdf4",
+        "--text-secondary": "#a7f3d0",
+        "--text-muted": "#4ade80",
+        "--heat-0": "#112e23",
+        "--heat-1": "#064e3b",
+        "--heat-2": "#0f766e",
+        "--heat-3": "#10b981"
+      },
+      isLimited: false
+    },
+    {
       name: "Midnight Mode",
       type: "theme",
       priceCoins: 50,

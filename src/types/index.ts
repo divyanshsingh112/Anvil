@@ -50,5 +50,21 @@ export interface ToggleResponse {
     xpReward: number;
     icon: string;
   }[];
+  chainCompleted?: {
+    chainId: string;
+    chainName: string;
+    bonusXp: number;
+  } | null;
+}
+
+export interface ResolvedChain {
+  id: string;
+  userId: string;
+  name: string;
+  habitIds: string[];
+  bonusXp: number;
+  createdAt: Date | string;
+  lastCompletedDay: Date | string | null;
+  habits: Habit[];
 }
 

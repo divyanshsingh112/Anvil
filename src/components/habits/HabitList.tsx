@@ -2,6 +2,7 @@
 
 import { Habit, ToggleResponse } from "@/types";
 import HabitCard from "./HabitCard";
+import { useLabels } from "@/hooks/useLabels";
 
 interface HabitListProps {
   habits: Habit[];
@@ -28,6 +29,22 @@ export default function HabitList({
   onToggleHabit,
   isTodayPeriod,
 }: HabitListProps) {
+  const labels = useLabels();
+
+  const getEmptyMessage = () => {
+    if (labels.habitSingular === "Quest") return "No quests yet — forge your first one";
+    if (labels.habitSingular === "Lap") return "No laps yet — start your first one";
+    if (labels.habitSingular === "Drill") return "No drills yet — plan your first one";
+    return "No habits yet — create your first one";
+  };
+
+  const getButtonText = () => {
+    if (labels.habitSingular === "Quest") return "Forge New Quest";
+    if (labels.habitSingular === "Lap") return "Start New Lap";
+    if (labels.habitSingular === "Drill") return "Plan New Drill";
+    return "Create New Habit";
+  };
+
   if (habits.length === 0) {
     return (
       <div
@@ -35,14 +52,14 @@ export default function HabitList({
         style={{ borderColor: "var(--border)" }}
       >
         <p className="text-lg font-semibold" style={{ color: "var(--text-secondary)" }}>
-          No quests yet — forge your first one
+          {getEmptyMessage()}
         </p>
         <button
           onClick={onCreateQuestClick}
           className="mt-4 rounded-lg px-4 py-2 text-sm font-semibold text-white transition-opacity hover:opacity-90"
           style={{ backgroundColor: "var(--accent-purple)" }}
         >
-          Forge New Quest
+          {getButtonText()}
         </button>
       </div>
     );

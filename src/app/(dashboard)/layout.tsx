@@ -5,6 +5,7 @@ import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useEffect } from "react";
 import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen } from "lucide-react";
+import { useLabels } from "@/hooks/useLabels";
 
 export default function DashboardLayout({
   children,
@@ -13,6 +14,7 @@ export default function DashboardLayout({
 }) {
   const pathname = usePathname();
   const { coins, level, fetchUserStats } = useUserStore();
+  const labels = useLabels();
 
   useEffect(() => {
     fetchUserStats();
@@ -20,9 +22,9 @@ export default function DashboardLayout({
 
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: Swords },
-    { label: "Journal", href: "/journal", icon: BookOpen },
+    { label: labels.habitSingular === "Quest" ? "Journal" : `${labels.habitSingular} Journal`, href: "/journal", icon: BookOpen },
     { label: "Shop", href: "/shop", icon: ShoppingBag },
-    { label: "Leaderboard", href: "/leaderboard", icon: Trophy },
+    { label: labels.leaderboardLabel, href: "/leaderboard", icon: Trophy },
     { label: "Profile", href: "/profile", icon: User },
   ];
 
@@ -95,9 +97,9 @@ export default function DashboardLayout({
                 borderColor: "rgba(168, 85, 247, 0.3)",
                 color: "#c084fc",
               }}
-              title="Your Hero Level"
+              title={`Your Active ${labels.levelLabel}`}
             >
-              <span>LVL {level}</span>
+              <span>{labels.levelLabel === "Level" ? "LVL" : labels.levelLabel.toUpperCase()} {level}</span>
             </div>
           </div>
         </div>
