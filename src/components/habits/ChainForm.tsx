@@ -31,30 +31,30 @@ export default function ChainForm({
   };
 
   const getFormTitle = () => {
-    if (labels.habitSingular === "Quest") return "Forge Quest Chain";
-    if (labels.habitSingular === "Lap") return "Assemble Lap Chain";
-    if (labels.habitSingular === "Drill") return "Group Drill Chain";
-    return "Create Habit Chain";
+    if (labels.habitSingular === "Quest") return `Forge ${labels.chainLabel}`;
+    if (labels.habitSingular === "Lap") return `Assemble ${labels.chainLabel}`;
+    if (labels.habitSingular === "Drill") return `Group ${labels.chainLabel}`;
+    return `Create ${labels.chainLabel}`;
   };
 
   const getSubmitButtonText = () => {
-    if (isSubmitting) return "Creating...";
-    if (labels.habitSingular === "Quest") return "Forge Chain";
-    return "Create Chain";
+    if (isSubmitting) return "Saving...";
+    if (labels.habitSingular === "Quest") return `Forge ${labels.chainLabel}`;
+    return `Create ${labels.chainLabel}`;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (name.trim().length === 0) {
-      setError("Chain name cannot be empty");
+      setError(`${labels.chainLabel} name cannot be empty`);
       return;
     }
     if (name.length > 50) {
-      setError("Chain name cannot exceed 50 characters");
+      setError(`${labels.chainLabel} name cannot exceed 50 characters`);
       return;
     }
     if (selectedIds.length < 2) {
-      setError(`A chain must group at least 2 ${labels.habitPlural.toLowerCase()}`);
+      setError(`A ${labels.chainLabel.toLowerCase()} must group at least 2 ${labels.habitPlural.toLowerCase()}`);
       return;
     }
 
@@ -73,13 +73,13 @@ export default function ChainForm({
 
       if (!res.ok) {
         const errData = await res.json().catch(() => ({}));
-        throw new Error(errData.error || "Failed to create chain");
+        throw new Error(errData.error || `Failed to create ${labels.chainLabel.toLowerCase()}`);
       }
 
       onSuccess();
     } catch (err) {
       const errorObj = err as Error;
-      setError(errorObj.message || "Failed to create chain");
+      setError(errorObj.message || `Failed to create ${labels.chainLabel.toLowerCase()}`);
     } finally {
       setIsSubmitting(false);
     }
@@ -114,7 +114,7 @@ export default function ChainForm({
           className="mb-2 block text-sm font-semibold uppercase tracking-wider"
           style={{ color: "var(--text-secondary)" }}
         >
-          Chain Name
+          {labels.chainLabel} Name
         </label>
         <input
           id="chainName"
@@ -129,7 +129,7 @@ export default function ChainForm({
             borderColor: "var(--border)",
             color: "var(--text-primary)",
           }}
-          placeholder="e.g. Morning Routine Link"
+          placeholder={`e.g. Morning ${labels.chainLabel}`}
           disabled={isSubmitting}
         />
         <div className="mt-1 text-right text-xs" style={{ color: "var(--text-muted)" }}>

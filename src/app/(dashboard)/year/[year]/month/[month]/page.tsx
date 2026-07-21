@@ -366,7 +366,7 @@ export default function MonthTrackerPage() {
         <div className="space-y-4 mb-8">
           <div className="flex items-center justify-between border-b pb-2" style={{ borderColor: "var(--border)" }}>
             <h2 className="text-xl font-bold flex items-center gap-2" style={{ color: "var(--text-primary)" }}>
-              {labels.habitSingular === "Quest" ? "Quest Chains" : `${labels.habitSingular} Chains`}
+              {labels.chainPlural}
             </h2>
             <button
               onClick={() => setChainFormOpen(true)}
@@ -374,18 +374,18 @@ export default function MonthTrackerPage() {
               style={{ backgroundColor: "var(--accent-teal)" }}
             >
               <Plus className="h-3.5 w-3.5" />
-              New Chain
+              New {labels.chainLabel}
             </button>
           </div>
 
           {isChainsLoading && chains.length === 0 ? (
             <div className="flex items-center gap-2 py-4">
               <Loader2 className="h-4 w-4 animate-spin text-teal-400" />
-              <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Loading chains...</span>
+              <span className="text-xs text-slate-500 font-bold uppercase tracking-wider">Loading {labels.chainPlural.toLowerCase()}...</span>
             </div>
           ) : chains.length === 0 ? (
             <p className="text-xs italic py-2 animate-pulse" style={{ color: "var(--text-muted)" }}>
-              No {labels.habitSingular.toLowerCase()} chains forged yet. Link active {labels.habitPlural.toLowerCase()} together for double XP!
+              No {labels.chainPlural.toLowerCase()} forged yet. Link active {labels.habitPlural.toLowerCase()} together for double {labels.xpLabel}!
             </p>
           ) : (
             <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3">

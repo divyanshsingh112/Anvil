@@ -17,6 +17,8 @@ export interface TerminologyPack {
   attrInt: string;
   attrWis: string;
   attrCha: string;
+  chainLabel: string;
+  chainPlural: string;
   iconWarrior: string; // lucide icon name
   iconMage: string;
   iconRogue: string;
@@ -42,6 +44,8 @@ export const terminologyPacks: Record<string, TerminologyPack> = {
     attrInt: "Focus",
     attrWis: "Discipline",
     attrCha: "Social",
+    chainLabel: "Routine",
+    chainPlural: "Routines",
     iconWarrior: "Dumbbell",
     iconMage: "BookOpen",
     iconRogue: "Shuffle",
@@ -65,6 +69,8 @@ export const terminologyPacks: Record<string, TerminologyPack> = {
     attrInt: "INT",
     attrWis: "WIS",
     attrCha: "CHA",
+    chainLabel: "Quest Chain",
+    chainPlural: "Quest Chains",
     iconWarrior: "Sword",
     iconMage: "Sparkles",
     iconRogue: "Zap",
@@ -88,6 +94,8 @@ export const terminologyPacks: Record<string, TerminologyPack> = {
     attrInt: "Strategy",
     attrWis: "Handling",
     attrCha: "Rep",
+    chainLabel: "Circuit",
+    chainPlural: "Circuits",
     iconWarrior: "Gauge",
     iconMage: "Route",
     iconRogue: "Wrench",
@@ -111,6 +119,8 @@ export const terminologyPacks: Record<string, TerminologyPack> = {
     attrInt: "Focus",
     attrWis: "Agility",
     attrCha: "Clout",
+    chainLabel: "Combo",
+    chainPlural: "Combos",
     iconWarrior: "Dumbbell",
     iconMage: "Target",
     iconRogue: "Zap",

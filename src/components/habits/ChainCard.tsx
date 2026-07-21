@@ -31,7 +31,7 @@ export default function ChainCard({
   const handleDelete = async () => {
     if (
       !confirm(
-        `Are you sure you want to delete this chain? Your individual ${labels.habitPlural.toLowerCase()} and completion history will be completely unaffected.`
+        `Are you sure you want to delete this ${labels.chainLabel.toLowerCase()}? Your individual ${labels.habitPlural.toLowerCase()} and completion history will be completely unaffected.`
       )
     ) {
       return;
@@ -44,13 +44,13 @@ export default function ChainCard({
       });
 
       if (!res.ok) {
-        throw new Error("Failed to delete chain");
+        throw new Error(`Failed to delete ${labels.chainLabel.toLowerCase()}`);
       }
 
       onDeleteSuccess();
     } catch (err) {
       const errorObj = err as Error;
-      alert(errorObj.message || "Failed to delete chain");
+      alert(errorObj.message || `Failed to delete ${labels.chainLabel.toLowerCase()}`);
     } finally {
       setIsDeleting(false);
     }
@@ -112,7 +112,7 @@ export default function ChainCard({
         <button
           onClick={handleDelete}
           className="rounded-lg p-2 transition-colors hover:bg-red-950/30"
-          title="Delete Chain"
+          title={`Delete ${labels.chainLabel}`}
           disabled={isDeleting}
         >
           {isDeleting ? (
