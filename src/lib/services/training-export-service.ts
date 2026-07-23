@@ -9,7 +9,12 @@ import { Prisma } from "@prisma/client";
 export function getAnonId(userId: string): string {
   const daysSinceEpoch = Math.floor(Date.now() / (1000 * 60 * 60 * 24));
   const periodIndex = Math.floor(daysSinceEpoch / 90);
-  const systemSecret = process.env.ANON_SYSTEM_SECRET || "anvil-training-secret-key-987";
+  const systemSecret = process.env.ANON_SYSTEM_SECRET;
+  if (!systemSecret) {
+    throw new Error(
+      "ANON_SYSTEM_SECRET must be set — refusing to generate anonId with a fallback secret, since this would compromise the anonymization guarantee."
+    );
+  }
 
   return createHash("sha256")
     .update(`${userId}-${periodIndex}-${systemSecret}`)
