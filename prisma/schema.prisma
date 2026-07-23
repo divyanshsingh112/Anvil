@@ -31,6 +31,9 @@ model User {
   freeFreezeCharges  Int       @default(0)
   freezeActiveDate   DateTime? @db.Date
 
+  // Privacy & Consent Settings (Phase 18.5)
+  trainingDataConsent      Boolean   @default(false)
+  trainingConsentUpdatedAt DateTime?
 
   habits            Habit[]
   completions       Completion[]
@@ -253,4 +256,24 @@ model SeasonalEvent {
   bonusClass     String   // warrior | mage | rogue | all
   xpMultiplier   Decimal
   limitedItemIds String[]
+}
+
+// ─── TRAINING DATA SNAPSHOT ──────────────────────────────────────────
+
+model TrainingDataSnapshot {
+  id                     String   @id @default(uuid()) @db.Uuid
+  anonId                 String
+  snapshotDate           DateTime @db.Date
+  completionRateTrend    Decimal  @db.Decimal(5, 2)
+  streakLength           Int
+  daysSinceLastLogin     Int
+  weekdayVariance        Decimal  @db.Decimal(5, 2)
+  timeOfDayBuckets       Json
+  classDistribution      Json
+  difficultyDistribution Json
+  momentumScore          Decimal  @db.Decimal(5, 2)
+  archetypeLabel         String?
+
+  @@index([snapshotDate])
+  @@index([anonId])
 }

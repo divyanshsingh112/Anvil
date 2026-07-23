@@ -7,6 +7,8 @@ interface UserState extends UserGamification {
   warriorCompletions: number;
   mageCompletions: number;
   rogueCompletions: number;
+  trainingDataConsent: boolean;
+  trainingConsentUpdatedAt: string | null;
 
   fetchUserStats: () => Promise<void>;
   applyToggleResult: (data: UserGamification) => void;
@@ -26,6 +28,8 @@ export const useUserStore = create<UserState>((set) => ({
   warriorCompletions: 0,
   mageCompletions: 0,
   rogueCompletions: 0,
+  trainingDataConsent: false,
+  trainingConsentUpdatedAt: null,
   isLoading: false,
   error: null,
 
@@ -51,6 +55,8 @@ export const useUserStore = create<UserState>((set) => ({
         warriorCompletions: data.warriorCompletions || 0,
         mageCompletions: data.mageCompletions || 0,
         rogueCompletions: data.rogueCompletions || 0,
+        trainingDataConsent: !!data.trainingDataConsent,
+        trainingConsentUpdatedAt: data.trainingConsentUpdatedAt || null,
         isLoading: false,
       });
     } catch (err) {

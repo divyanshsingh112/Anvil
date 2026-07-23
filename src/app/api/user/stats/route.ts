@@ -37,6 +37,13 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Asynchronously trigger lazy training data export if consent is given
+    if (user.trainingDataConsent) {
+      import("@/lib/services/training-export-service").then(({ exportAnonymizedSnapshot }) => {
+        exportAnonymizedSnapshot(session.user.id).catch(console.error);
+      });
+    }
+
     return NextResponse.json({
       xp: Number(user.xp),
       level: user.level,
@@ -50,6 +57,8 @@ export async function GET() {
       warriorCompletions: stats?.warriorCompletions || 0,
       mageCompletions: stats?.mageCompletions || 0,
       rogueCompletions: stats?.rogueCompletions || 0,
+      trainingDataConsent: user.trainingDataConsent,
+      trainingConsentUpdatedAt: user.trainingConsentUpdatedAt,
     });
   } catch (error) {
     console.error("GET user stats error:", error);
