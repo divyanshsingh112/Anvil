@@ -7,6 +7,7 @@ import * as Icons from "lucide-react";
 import { Coins, Flame, Award, Loader2 } from "lucide-react";
 import React, { ComponentType } from "react";
 import AvatarBuilder from "@/components/gamification/AvatarBuilder";
+import ProcrastinationFingerprint from "@/components/dashboard/ProcrastinationFingerprint";
 
 interface AchievementUI {
   id: string;
@@ -178,8 +179,13 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* Achievements Gallery */}
-      <section className="mt-12">
+      {/* Procrastination Fingerprint Insight Card */}
+      <div className="mt-8">
+        <ProcrastinationFingerprint />
+      </div>
+ 
+       {/* Achievements Gallery */}
+       <section className="mt-12">
         <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 mb-8">
           <div>
             <h2 className="text-xl font-extrabold text-white tracking-tight flex items-center gap-2">
