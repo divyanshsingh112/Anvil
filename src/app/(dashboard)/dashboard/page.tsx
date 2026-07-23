@@ -6,6 +6,7 @@ import { Calendar, ChevronRight, Swords } from "lucide-react";
 import WeeklyReportCard from "@/components/dashboard/WeeklyReportCard";
 import ClassRadarChart from "@/components/dashboard/ClassRadarChart";
 import ConsistencyTrendChart from "@/components/dashboard/ConsistencyTrendChart";
+import MomentumWidget from "@/components/dashboard/MomentumWidget";
 import { useLabels } from "@/hooks/useLabels";
 
 interface YearSummary {
@@ -61,8 +62,15 @@ export default function DashboardPage() {
         </p>
       </div>
 
-      {/* Weekly Report Card Widget */}
-      <WeeklyReportCard />
+      {/* Weekly Report + Momentum Row */}
+      <div className="grid gap-6 md:grid-cols-3">
+        <div className="md:col-span-2">
+          <WeeklyReportCard />
+        </div>
+        <div className="md:col-span-1">
+          <MomentumWidget />
+        </div>
+      </div>
 
       {/* Analytics Charts — Class Radar + Consistency Trend */}
       <div className="grid gap-6 md:grid-cols-2">

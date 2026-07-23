@@ -37,6 +37,11 @@ export async function GET() {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
     }
 
+    // Asynchronously trigger daily lazy momentum recalculation (non-blocking)
+    import("@/lib/services/momentum-service").then(({ triggerLazyMomentumRecalculation }) => {
+      triggerLazyMomentumRecalculation(session.user.id).catch(console.error);
+    });
+
     // Asynchronously trigger lazy training data export if consent is given
     if (user.trainingDataConsent) {
       import("@/lib/services/training-export-service").then(({ exportAnonymizedSnapshot }) => {
