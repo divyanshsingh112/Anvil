@@ -260,6 +260,12 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
       // Update the user store with new gamification values
       useUserStore.getState().applyToggleResult(user);
 
+      // Update the completions counts for real-time avatar changes
+      const toggledHabit = get().habits.find((h) => h.id === habitId);
+      if (toggledHabit && (toggledHabit.class === "warrior" || toggledHabit.class === "mage" || toggledHabit.class === "rogue")) {
+        useUserStore.getState().updateClassCompletions(toggledHabit.class, completed);
+      }
+
       set((state) => ({
         habits: state.habits.map((h) => {
           if (h.id !== habitId) return h;

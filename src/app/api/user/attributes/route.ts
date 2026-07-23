@@ -64,6 +64,9 @@ export async function GET() {
       streak: user.streak,
       longestStreak: user.longestStreak,
       overallCompletionRate: rateResult.percentage,
+      rivalWins: stats.rivalWins,
+      rivalLosses: stats.rivalLosses,
+      rivalTies: stats.rivalTies,
     });
 
     return NextResponse.json({

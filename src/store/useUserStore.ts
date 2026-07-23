@@ -4,9 +4,13 @@ import { UserGamification } from "@/types";
 interface UserState extends UserGamification {
   isLoading: boolean;
   error: string | null;
+  warriorCompletions: number;
+  mageCompletions: number;
+  rogueCompletions: number;
 
   fetchUserStats: () => Promise<void>;
   applyToggleResult: (data: UserGamification) => void;
+  updateClassCompletions: (classType: "warrior" | "mage" | "rogue", increment: boolean) => void;
 }
 
 export const useUserStore = create<UserState>((set) => ({
@@ -19,6 +23,9 @@ export const useUserStore = create<UserState>((set) => ({
   streakShieldActive: false,
   freeFreezeCharges: 0,
   freezeActiveDate: null,
+  warriorCompletions: 0,
+  mageCompletions: 0,
+  rogueCompletions: 0,
   isLoading: false,
   error: null,
 
@@ -41,6 +48,9 @@ export const useUserStore = create<UserState>((set) => ({
         streakShieldActive: data.streakShieldActive,
         freeFreezeCharges: data.freeFreezeCharges,
         freezeActiveDate: data.freezeActiveDate,
+        warriorCompletions: data.warriorCompletions || 0,
+        mageCompletions: data.mageCompletions || 0,
+        rogueCompletions: data.rogueCompletions || 0,
         isLoading: false,
       });
     } catch (err) {
@@ -60,6 +70,16 @@ export const useUserStore = create<UserState>((set) => ({
       streakShieldActive: data.streakShieldActive,
       freeFreezeCharges: data.freeFreezeCharges,
       freezeActiveDate: data.freezeActiveDate,
+    });
+  },
+
+  updateClassCompletions: (classType, increment) => {
+    set((state) => {
+      const field = `${classType}Completions` as "warriorCompletions" | "mageCompletions" | "rogueCompletions";
+      const change = increment ? 1 : -1;
+      return {
+        [field]: Math.max(0, state[field] + change),
+      };
     });
   },
 }));

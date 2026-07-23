@@ -14,8 +14,23 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const user = await prisma.$transaction(async (tx) => {
-      return await checkAndApplyStreakDecayAndRecharge(tx, session.user.id);
+    const [user, stats] = await prisma.$transaction(async (tx) => {
+      const u = await checkAndApplyStreakDecayAndRecharge(tx, session.user.id);
+      let s = await tx.userStats.findUnique({
+        where: { userId: session.user.id },
+      });
+      if (!s && u) {
+        s = await tx.userStats.create({
+          data: {
+            userId: u.id,
+            totalCompletions: 0,
+            warriorCompletions: 0,
+            mageCompletions: 0,
+            rogueCompletions: 0,
+          },
+        });
+      }
+      return [u, s];
     });
 
     if (!user) {
@@ -32,6 +47,9 @@ export async function GET() {
       streakShieldActive: user.streakShieldActive,
       freeFreezeCharges: user.freeFreezeCharges,
       freezeActiveDate: user.freezeActiveDate,
+      warriorCompletions: stats?.warriorCompletions || 0,
+      mageCompletions: stats?.mageCompletions || 0,
+      rogueCompletions: stats?.rogueCompletions || 0,
     });
   } catch (error) {
     console.error("GET user stats error:", error);

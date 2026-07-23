@@ -219,6 +219,10 @@ export async function processCompletionToggle(
 
       // Recalculate attribute scores (uses data already in the transaction)
       await recalculateAttributeScores(tx, userId, newStreak, newLongestStreak);
+
+      // Hook into Rival System to increment active duel counts
+      const { handleHabitToggle } = await import("./rival-service");
+      await handleHabitToggle(tx, userId, habitId, true);
     }
   } else {
     // Toggle incomplete (un-toggle)
@@ -262,6 +266,10 @@ export async function processCompletionToggle(
 
     // Recalculate attribute scores after decrement
     await recalculateAttributeScores(tx, userId, newStreak, user.longestStreak);
+
+    // Hook into Rival System to decrement active duel counts
+    const { handleHabitToggle } = await import("./rival-service");
+    await handleHabitToggle(tx, userId, habitId, false);
   }
 
   // Save the updated user values

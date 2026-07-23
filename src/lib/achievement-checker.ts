@@ -14,10 +14,10 @@ export interface UnlockedAchievement {
 export async function checkAchievements(
   tx: Prisma.TransactionClient,
   userId: string,
-  eventType: "completion"
+  eventType: "completion" | "rival"
 ): Promise<UnlockedAchievement[]> {
-  if (eventType !== "completion") {
-    return []; // Sprint 3/4 achievements stay locked automatically
+  if (eventType !== "completion" && eventType !== "rival") {
+    return [];
   }
 
   // 1. Fetch user and stats
@@ -82,8 +82,14 @@ export async function checkAchievements(
       case "perfect_week":
         isUnlocked = await checkPerfectWeek(tx, userId);
         break;
+      case "rival_winner":
+        isUnlocked = stats ? stats.rivalWins >= 1 : false;
+        break;
+      case "rival_dominator":
+        isUnlocked = stats ? stats.rivalWins >= 5 : false;
+        break;
       default:
-        // Sprint 3/4 achievements (chain_master, rival_winner, rival_dominator, momentum_100, comeback_kid)
+        // Sprint 3/4 achievements (chain_master, momentum_100, comeback_kid)
         // behave as dead code that never fires because their underlying triggers are unimplemented.
         isUnlocked = false;
         break;

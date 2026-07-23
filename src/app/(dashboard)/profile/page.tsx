@@ -4,8 +4,9 @@ import { useEffect, useState } from "react";
 import { useUserStore } from "@/store/useUserStore";
 import { useLabels } from "@/hooks/useLabels";
 import * as Icons from "lucide-react";
-import { Coins, Flame, Award, User, Loader2 } from "lucide-react";
+import { Coins, Flame, Award, Loader2 } from "lucide-react";
 import React, { ComponentType } from "react";
+import AvatarBuilder from "@/components/gamification/AvatarBuilder";
 
 interface AchievementUI {
   id: string;
@@ -19,7 +20,17 @@ interface AchievementUI {
 }
 
 export default function ProfilePage() {
-  const { xp, level, coins, streak, longestStreak, fetchUserStats } = useUserStore();
+  const {
+    xp,
+    level,
+    coins,
+    streak,
+    longestStreak,
+    warriorCompletions,
+    mageCompletions,
+    rogueCompletions,
+    fetchUserStats,
+  } = useUserStore();
   const labels = useLabels();
   const [achievements, setAchievements] = useState<AchievementUI[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -68,16 +79,13 @@ export default function ProfilePage() {
         />
 
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center relative z-10">
-          {/* Avatar Icon */}
-          <div
-            className="flex h-24 w-24 shrink-0 items-center justify-center rounded-2xl border"
-            style={{
-              backgroundColor: "var(--bg-tertiary)",
-              borderColor: "var(--border)",
-            }}
-          >
-            <User className="h-12 w-12 text-slate-400" />
-          </div>
+          {/* Layered Character Avatar */}
+          <AvatarBuilder
+            warriorCompletions={warriorCompletions}
+            mageCompletions={mageCompletions}
+            rogueCompletions={rogueCompletions}
+            size={96}
+          />
 
           <div className="flex-1 text-center md:text-left">
             <h1 className="text-2xl font-black md:text-3xl text-white tracking-tight">

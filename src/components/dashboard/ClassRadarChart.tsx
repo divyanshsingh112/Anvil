@@ -11,6 +11,8 @@ import {
 } from "recharts";
 import { Loader2, Shield } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
+import { useUserStore } from "@/store/useUserStore";
+import AvatarBuilder from "@/components/gamification/AvatarBuilder";
 
 interface AttributeData {
   strScore: number;
@@ -21,13 +23,15 @@ interface AttributeData {
 
 export default function ClassRadarChart() {
   const labels = useLabels();
+  const { warriorCompletions, mageCompletions, rogueCompletions, fetchUserStats } = useUserStore();
   const [attrs, setAttrs] = useState<AttributeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAttributes();
-  }, []);
+    fetchUserStats();
+  }, [fetchUserStats]);
 
   const fetchAttributes = async () => {
     setIsLoading(true);
@@ -103,42 +107,57 @@ export default function ClassRadarChart() {
         </div>
       </div>
 
-      {/* Chart */}
-      <ResponsiveContainer width="100%" height={260}>
-        <RadarChart cx="50%" cy="50%" outerRadius="70%" data={chartData}>
-          <PolarGrid
-            stroke="var(--border)"
-            strokeOpacity={0.6}
+      {/* Main Layout Area: Responsive Flex Container */}
+      <div className="flex flex-col md:flex-row items-center gap-6 mt-4">
+        {/* Left Panel: Compact Avatar Builder */}
+        <div className="flex-shrink-0">
+          <AvatarBuilder
+            warriorCompletions={warriorCompletions}
+            mageCompletions={mageCompletions}
+            rogueCompletions={rogueCompletions}
+            size={76}
           />
-          <PolarAngleAxis
-            dataKey="attribute"
-            tick={{
-              fill: "var(--text-secondary)",
-              fontSize: 12,
-              fontWeight: 700,
-            }}
-          />
-          <PolarRadiusAxis
-            angle={90}
-            domain={[0, 100]}
-            tick={false}
-            axisLine={false}
-          />
-          <Radar
-            name="Attributes"
-            dataKey="value"
-            stroke="var(--accent-purple)"
-            strokeWidth={2}
-            fill="var(--accent-purple)"
-            fillOpacity={0.25}
-            animationDuration={800}
-            animationEasing="ease-out"
-          />
-        </RadarChart>
-      </ResponsiveContainer>
+        </div>
+
+        {/* Right Panel: Recharts Radar Chart */}
+        <div className="flex-1 w-full">
+          <ResponsiveContainer width="100%" height={210}>
+            <RadarChart cx="50%" cy="50%" outerRadius="65%" data={chartData}>
+              <PolarGrid
+                stroke="var(--border)"
+                strokeOpacity={0.6}
+              />
+              <PolarAngleAxis
+                dataKey="attribute"
+                tick={{
+                  fill: "var(--text-secondary)",
+                  fontSize: 10,
+                  fontWeight: 700,
+                }}
+              />
+              <PolarRadiusAxis
+                angle={90}
+                domain={[0, 100]}
+                tick={false}
+                axisLine={false}
+              />
+              <Radar
+                name="Attributes"
+                dataKey="value"
+                stroke="var(--accent-purple)"
+                strokeWidth={2}
+                fill="var(--accent-purple)"
+                fillOpacity={0.25}
+                animationDuration={800}
+                animationEasing="ease-out"
+              />
+            </RadarChart>
+          </ResponsiveContainer>
+        </div>
+      </div>
 
       {/* Score Labels */}
-      <div className="grid grid-cols-4 gap-2 mt-1">
+      <div className="grid grid-cols-4 gap-2 mt-4 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
         {chartData.map((d) => (
           <div key={d.attribute} className="text-center">
             <div

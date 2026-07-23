@@ -101,6 +101,11 @@ model UserStats {
   chaScore           Decimal @default(0)
   updatedAt          DateTime @updatedAt
   lastPerfectDay     DateTime? @db.Date // Prevent double-awarding coins
+  
+  // Rival stats
+  rivalWins          Int     @default(0)
+  rivalLosses        Int     @default(0)
+  rivalTies          Int     @default(0)
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -195,18 +200,26 @@ model QuestChain {
 // ─── RIVAL ─────────────────────────────────────────────────────────
 
 model Rival {
-  id              String   @id @default(uuid()) @db.Uuid
-  challengerId    String   @db.Uuid
-  rivalId         String   @db.Uuid
-  habitName       String
-  startDate       DateTime @db.Date
-  endDate         DateTime @db.Date
-  challengerCount Int      @default(0)
-  rivalCount      Int      @default(0)
-  status          String   // pending | active | completed | declined
-  winnerId        String?  @db.Uuid
-  defeatMessage   String?
-  createdAt       DateTime @default(now())
+  id                 String    @id @default(uuid()) @db.Uuid
+  challengerId       String    @db.Uuid
+  rivalId            String    @db.Uuid
+  habitName          String
+  startDate          DateTime? @db.Date
+  endDate            DateTime? @db.Date
+  challengerCount    Int       @default(0)
+  rivalCount         Int       @default(0)
+  status             String    // pending | active | completed | declined
+  winnerId           String?   @db.Uuid
+  defeatMessage      String?
+  createdAt          DateTime  @default(now())
+  
+  // Specific habit IDs linking to each user's tracked habits
+  challengerHabitId  String?   @db.Uuid
+  rivalHabitId       String?   @db.Uuid
+  
+  // Notification tracking flags for dashboard load resolution notifications
+  challengerSeen     Boolean   @default(false)
+  rivalSeen          Boolean   @default(false)
 
   challenger User @relation("RivalsAsChallenger", fields: [challengerId], references: [id], onDelete: Cascade)
   rival      User @relation("RivalsAsRival", fields: [rivalId], references: [id], onDelete: Cascade)

@@ -41,6 +41,9 @@ interface AttributeInput {
    * Pass 0 if not available; CHA will still be non-zero if streak data exists.
    */
   overallCompletionRate?: number;
+  rivalWins?: number;
+  rivalLosses?: number;
+  rivalTies?: number;
 }
 
 /**
@@ -54,52 +57,50 @@ function classScore(classCompletions: number, totalCompletions: number): number 
 }
 
 /**
- * Computes the CHA (Charisma) placeholder score.
- *
- * ┌──────────────────────────────────────────────────────────────────────┐
- * │  TEMPORARY PLACEHOLDER — Sprint 3 Rival System will replace this   │
- * │                                                                     │
- * │  Real CHA will be derived from social interactions (rival battles,  │
- * │  challenges sent/received, win rate) once the Rival System is       │
- * │  implemented. This formula is a stand-in so the radar chart has a   │
- * │  non-zero, meaningful CHA axis until then.                          │
- * └──────────────────────────────────────────────────────────────────────┘
+ * Computes the real CHA (Charisma) score.
  *
  * Formula:
- *   streakRatio = currentStreak / max(longestStreak, 1)
- *   CHA = min(100, round(
- *     streakRatio × 0.6 × sqrt(totalCompletions) × 10
- *     + (totalCompletions > 0 ? overallCompletionRate × 0.4 : 0)
- *   ))
+ *   consistencyScore = streakRatio × 0.6 × sqrt(totalCompletions) × 10
+ *                      + (totalCompletions > 0 ? overallCompletionRate × 0.4 : 0)
  *
- * Rationale:
- *   - streakRatio (60% weight): How close you are to your personal best streak.
- *     At peak streak the ratio is 1.0; after a break it drops, reflecting
- *     reduced "social reliability."
- *   - overallCompletionRate (40% weight): Rewards consistent habit completion.
- *   - sqrt(totalCompletions): Ensures the score grows with activity volume,
- *     not just from ratio alone.
+ *   If the user has zero rival duels completed:
+ *     rivalWeight = 0
+ *     CHA = consistencyScore
  *
- * Example: streak=3, longestStreak=5, totalCompletions=16, completionRate=50%
- *   streakRatio = 0.6
- *   CHA = min(100, round(0.6 × 0.6 × 4 × 10 + 50 × 0.4))
- *       = min(100, round(14.4 + 20))
- *       = 34
+ *   If the user has rival history:
+ *     rivalWeight = 0.4 (40% weight)
+ *     winRate = rivalWins / (rivalWins + rivalLosses + rivalTies)
+ *     rivalComponent = winRate × 100
+ *     CHA = (1 - rivalWeight) × consistencyScore + rivalWeight × rivalComponent
  */
-function chaPlaceholderScore(
+function calculateChaScore(
   totalCompletions: number,
   streak: number,
   longestStreak: number,
-  overallCompletionRate: number
+  overallCompletionRate: number,
+  rivalWins: number = 0,
+  rivalLosses: number = 0,
+  rivalTies: number = 0
 ): number {
   if (totalCompletions === 0 && streak === 0) return 0;
 
   const streakRatio = streak / Math.max(longestStreak, 1);
-
   const streakComponent = streakRatio * 0.6 * Math.sqrt(totalCompletions) * 10;
   const rateComponent = totalCompletions > 0 ? overallCompletionRate * 0.4 : 0;
+  const consistencyScore = streakComponent + rateComponent;
 
-  return Math.min(100, Math.round(streakComponent + rateComponent));
+  const totalDuels = rivalWins + rivalLosses + rivalTies;
+  let rivalComponent = 50; // Neutral baseline if no duels
+  let rivalWeight = 0; // No weight if no duels (defaults to 100% consistency)
+
+  if (totalDuels > 0) {
+    const winRate = rivalWins / totalDuels;
+    rivalComponent = winRate * 100;
+    rivalWeight = 0.4; // 40% based on rival performance
+  }
+
+  const rawCha = (1 - rivalWeight) * consistencyScore + rivalWeight * rivalComponent;
+  return Math.min(100, Math.round(rawCha));
 }
 
 /**
@@ -117,12 +118,23 @@ export function calculateAttributeScores(input: AttributeInput): AttributeScores
     streak,
     longestStreak,
     overallCompletionRate = 0,
+    rivalWins = 0,
+    rivalLosses = 0,
+    rivalTies = 0,
   } = input;
 
   return {
     strScore: classScore(warriorCompletions, totalCompletions),
     intScore: classScore(mageCompletions, totalCompletions),
     wisScore: classScore(rogueCompletions, totalCompletions),
-    chaScore: chaPlaceholderScore(totalCompletions, streak, longestStreak, overallCompletionRate),
+    chaScore: calculateChaScore(
+      totalCompletions,
+      streak,
+      longestStreak,
+      overallCompletionRate,
+      rivalWins,
+      rivalLosses,
+      rivalTies
+    ),
   };
 }
