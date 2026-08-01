@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
+import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { processCompletionToggle } from "@/lib/services/completion-service";
@@ -23,7 +24,7 @@ export async function POST(request: Request) {
     }
 
     // Run the toggle operation inside a single atomic database transaction (Phase 11.5 logic)
-    const result = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
       return await processCompletionToggle(tx, userId, habitId, completed, {
         timeBucket,
         timeAccuracy,
