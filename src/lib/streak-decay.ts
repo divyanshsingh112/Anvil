@@ -75,10 +75,12 @@ export async function checkAndApplyStreakDecayAndRecharge(
     select: { scheduledDays: true },
   });
 
-  const scheduledCountYesterday = activeHabitsYesterday.filter((h) => {
-    const days = h.scheduledDays && h.scheduledDays.length > 0 ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
-    return days.includes(yesterdayDow);
-  }).length;
+  const scheduledCountYesterday = activeHabitsYesterday.filter(
+    (h: { scheduledDays: number[] }) => {
+      const days = h.scheduledDays && h.scheduledDays.length > 0 ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
+      return days.includes(yesterdayDow);
+    }
+  ).length;
 
   // If user has active habits but ZERO habits were scheduled for yesterday, yesterday was an off-day.
   if (scheduledCountYesterday === 0 && activeHabitsYesterday.length > 0) {

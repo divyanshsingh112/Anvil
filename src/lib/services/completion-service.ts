@@ -161,7 +161,9 @@ export async function processCompletionToggle(
         where: { userId, date: today },
         select: { habitId: true },
       });
-      const completedHabitIds = new Set(todayCompletions.map((c) => c.habitId));
+      const completedHabitIds = new Set(
+        todayCompletions.map((c: { habitId: string }) => c.habitId)
+      );
 
       // Increment XP
       newXp = newXp + xpReward;
@@ -178,7 +180,9 @@ export async function processCompletionToggle(
       const userChains = await tx.questChain.findMany({
         where: { userId },
       });
-      const matchingChains = userChains.filter((c) => c.habitIds.includes(habitId));
+      const matchingChains = userChains.filter((c: { habitIds: string[] }) =>
+        c.habitIds.includes(habitId)
+      );
 
       for (const chain of matchingChains) {
         const alreadyCompletedToday = chain.lastCompletedDay &&
@@ -347,7 +351,7 @@ async function checkPerfectDayCondition(
   });
 
   // Filter to only those scheduled for today
-  const todayScheduledHabits = monthHabits.filter((h: any) => {
+  const todayScheduledHabits = monthHabits.filter((h: { scheduledDays: number[] }) => {
     const days = (h.scheduledDays && h.scheduledDays.length > 0) ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
     return days.includes(currentDayOfWeek);
   });

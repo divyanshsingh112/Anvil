@@ -53,7 +53,7 @@ export async function POST(request: Request) {
         await tx.inventory.updateMany({
           where: {
             id: {
-              in: otherEquipped.map((e) => e.id)
+              in: otherEquipped.map((e: { id: string }) => e.id)
             }
           },
           data: {

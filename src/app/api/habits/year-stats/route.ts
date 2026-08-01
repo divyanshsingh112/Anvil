@@ -79,7 +79,10 @@ export async function GET(request: Request) {
     // Build stats for all 12 months
     const monthStats = [];
     for (let month = 1; month <= 12; month++) {
-      const monthHabits = habits.filter((h) => h.month === month);
+      const monthHabits = habits.filter(
+        (h: { id: string; month: number; scheduledDays: number[]; createdAt: Date }) =>
+          h.month === month
+      );
       const hasHabits = monthHabits.length > 0;
 
       let totalPossible = 0;

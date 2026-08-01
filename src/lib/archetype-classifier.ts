@@ -93,7 +93,7 @@ export async function classifyArchetype(
 
   // Filter out "skip" entries for time-based metrics
   const nonSkipCompletions = completions.filter(
-    (c: any) => c.timeAccuracy === "confirmed" || c.timeAccuracy === "estimated"
+    (c: { timeAccuracy: string }) => c.timeAccuracy === "confirmed" || c.timeAccuracy === "estimated"
   );
 
   const completionsCount = nonSkipCompletions.length;
@@ -201,7 +201,7 @@ export async function classifyArchetype(
       activeDaysCount++;
 
       // Check if ANY completion exists for this day
-      const hasCompletion = completions.some((c: any) => {
+      const hasCompletion = completions.some((c: { date: Date }) => {
         const cDate = new Date(c.date);
         const cStr = `${cDate.getUTCFullYear()}-${String(cDate.getUTCMonth() + 1).padStart(2, "0")}-${String(cDate.getUTCDate()).padStart(2, "0")}`;
         return cStr === dateStr;

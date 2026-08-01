@@ -125,7 +125,8 @@ export async function calculateProcrastinationFingerprint(
 
   // Filter out "skip" entries since completedAt = loggedAt is a weaker signal
   const nonSkipCompletions = completions.filter(
-    (c) => c.timeAccuracy === "confirmed" || c.timeAccuracy === "estimated"
+    (c: { timeAccuracy: string }) =>
+      c.timeAccuracy === "confirmed" || c.timeAccuracy === "estimated"
   );
 
   // 2. Query habits active in this window
@@ -251,13 +252,13 @@ export async function calculateProcrastinationFingerprint(
       // Map unique classes completed and skipped
       const completedClasses = new Set<string>();
       for (const id of compIds) {
-        const h = habits.find((x) => x.id === id);
+        const h = habits.find((x: { id: string; class: string }) => x.id === id);
         if (h) completedClasses.add(h.class);
       }
 
       const skippedClasses = new Set<string>();
       for (const id of skippedIds) {
-        const h = habits.find((x) => x.id === id);
+        const h = habits.find((x: { id: string; class: string }) => x.id === id);
         if (h) skippedClasses.add(h.class);
       }
 

@@ -27,7 +27,9 @@ export async function GET() {
       orderBy: { year: "desc" },
     });
 
-    const yearsSet = new Set(habitYears.map((h) => h.year));
+    const yearsSet = new Set(
+      habitYears.map((h: { year: number }) => h.year)
+    );
 
     // Always include the current real-world year
     const currentYear = new Date().getFullYear();

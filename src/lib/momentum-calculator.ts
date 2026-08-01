@@ -71,8 +71,8 @@ export async function calculateMomentumScore(userId: string, targetDateInput?: D
   const start14DaysAgo = new Date(today.getTime() - 14 * 24 * 60 * 60 * 1000);
   const start28DaysAgo = new Date(today.getTime() - 28 * 24 * 60 * 60 * 1000);
 
-  const completionsLast14 = completions.filter(c => new Date(c.date) >= start14DaysAgo);
-  const completionsPrev14 = completions.filter(c => new Date(c.date) >= start28DaysAgo && new Date(c.date) < start14DaysAgo);
+  const completionsLast14 = completions.filter((c: { date: Date }) => new Date(c.date) >= start14DaysAgo);
+  const completionsPrev14 = completions.filter((c: { date: Date }) => new Date(c.date) >= start28DaysAgo && new Date(c.date) < start14DaysAgo);
 
   let scheduledLast14 = 0;
   let scheduledPrev14 = 0;
@@ -122,7 +122,7 @@ export async function calculateMomentumScore(userId: string, targetDateInput?: D
   // Completion rates per weekday (0-6) over the last 28 days
   const ratesPerWeekday = [];
   for (let d = 0; d < 7; d++) {
-    const dayCompletions = completions.filter(c => {
+    const dayCompletions = completions.filter((c: { date: Date }) => {
       const cDate = new Date(c.date);
       return cDate >= start28DaysAgo && cDate.getDay() === d;
     }).length;
@@ -161,7 +161,7 @@ export async function calculateMomentumScore(userId: string, targetDateInput?: D
     const windowStart = new Date(start60DaysAgo.getTime() + startOffset * 24 * 60 * 60 * 1000);
     const windowEnd = new Date(windowStart.getTime() + 7 * 24 * 60 * 60 * 1000);
 
-    const windowCompletions = completions.filter(c => {
+    const windowCompletions = completions.filter((c: { date: Date }) => {
       const cDate = new Date(c.date);
       return cDate >= windowStart && cDate < windowEnd;
     }).length;
@@ -172,7 +172,7 @@ export async function calculateMomentumScore(userId: string, targetDateInput?: D
   }
 
   const start7DaysAgo = new Date(today.getTime() - 7 * 24 * 60 * 60 * 1000);
-  const current7 = completions.filter(c => new Date(c.date) >= start7DaysAgo).length;
+  const current7 = completions.filter((c: { date: Date }) => new Date(c.date) >= start7DaysAgo).length;
 
   const scoreBest7 = best7 > 0
     ? Math.min(100, Math.max(0, (current7 / best7) * 100))

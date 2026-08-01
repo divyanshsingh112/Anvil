@@ -26,15 +26,27 @@ export async function GET() {
     ]);
 
     // Create a map of habitId -> full habit object
-    const habitsMap = new Map(habits.map((h) => [h.id, h]));
+    const habitsMap = new Map(
+      habits.map((h: { id: string }) => [h.id, h])
+    );
 
     // Resolve habit IDs to full habit objects
-    const resolvedChains = chains.map((chain) => ({
-      ...chain,
-      habits: chain.habitIds
-        .map((id) => habitsMap.get(id))
-        .filter(Boolean),
-    }));
+    const resolvedChains = chains.map(
+      (chain: {
+        id: string;
+        userId: string;
+        name: string;
+        habitIds: string[];
+        bonusXp: number;
+        createdAt: Date;
+        lastCompletedDay: Date | null;
+      }) => ({
+        ...chain,
+        habits: chain.habitIds
+          .map((id: string) => habitsMap.get(id))
+          .filter(Boolean),
+      })
+    );
 
     return NextResponse.json(resolvedChains);
   } catch (error) {
@@ -87,7 +99,10 @@ export async function POST(request: Request) {
     });
 
     // Check ownership of all queried habits
-    const userHabits = habits.filter((h) => h.userId === userId);
+    const userHabits = habits.filter(
+      (h: { userId: string; archivedAt: Date | null; difficulty: string }) =>
+        h.userId === userId
+    );
     if (userHabits.length !== habitIds.length) {
       return NextResponse.json(
         { error: "One or more habits not found or access denied" },
@@ -96,7 +111,7 @@ export async function POST(request: Request) {
     }
 
     // Check if any habit in the chain is archived
-    if (userHabits.some((h) => h.archivedAt !== null)) {
+    if (userHabits.some((h: { archivedAt: Date | null }) => h.archivedAt !== null)) {
       return NextResponse.json(
         { error: "Cannot create a chain containing archived habits" },
         { status: 400 }

@@ -37,22 +37,39 @@ export async function GET(request: Request) {
     const hasNextPage = history.length > limit;
     const items = hasNextPage ? history.slice(0, limit) : history;
 
-    const data = items.map((d) => ({
-      id: d.id,
-      habitName: d.habitName,
-      startDate: d.startDate,
-      endDate: d.endDate,
-      challengerId: d.challengerId,
-      challengerName: d.challenger.displayName,
-      challengerCount: d.challengerCount,
-      rivalId: d.rivalId,
-      rivalName: d.rival.displayName,
-      rivalCount: d.rivalCount,
-      status: d.status,
-      winnerId: d.winnerId,
-      defeatMessage: d.defeatMessage,
-      createdAt: d.createdAt,
-    }));
+    const data = items.map(
+      (d: {
+        id: string;
+        habitName: string;
+        startDate: Date | null;
+        endDate: Date | null;
+        challengerId: string;
+        challenger: { displayName: string };
+        challengerCount: number;
+        rivalId: string;
+        rival: { displayName: string };
+        rivalCount: number;
+        status: string;
+        winnerId: string | null;
+        defeatMessage: string | null;
+        createdAt: Date;
+      }) => ({
+        id: d.id,
+        habitName: d.habitName,
+        startDate: d.startDate,
+        endDate: d.endDate,
+        challengerId: d.challengerId,
+        challengerName: d.challenger.displayName,
+        challengerCount: d.challengerCount,
+        rivalId: d.rivalId,
+        rivalName: d.rival.displayName,
+        rivalCount: d.rivalCount,
+        status: d.status,
+        winnerId: d.winnerId,
+        defeatMessage: d.defeatMessage,
+        createdAt: d.createdAt,
+      })
+    );
 
     return NextResponse.json({
       data,

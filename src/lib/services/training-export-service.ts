@@ -87,7 +87,7 @@ export async function exportAnonymizedSnapshot(userId: string): Promise<any> {
 
   // --- Calculate completionRateTrend over the last 14 days ---
   const completionsLast14 = completionsLast30.filter(
-    (c) => c.date >= new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
+    (c: { date: Date }) => c.date >= new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
   );
 
   let activeHabitSlots = 0;

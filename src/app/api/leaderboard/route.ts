@@ -30,14 +30,25 @@ export async function GET() {
     });
 
     // Compute ranks and find current user
-    const formattedUsers = allUsers.map((user, index) => ({
-      id: user.id,
-      displayName: user.displayName || "Anonymous Hero",
-      avatarUrl: user.avatarUrl,
-      level: user.level,
-      xp: Number(user.xp),
-      rank: index + 1
-    }));
+    const formattedUsers = allUsers.map(
+      (
+        user: {
+          id: string;
+          displayName: string;
+          avatarUrl: string | null;
+          level: number;
+          xp: any;
+        },
+        index: number
+      ) => ({
+        id: user.id,
+        displayName: user.displayName || "Anonymous Hero",
+        avatarUrl: user.avatarUrl,
+        level: user.level,
+        xp: Number(user.xp),
+        rank: index + 1
+      })
+    );
 
     const top50 = formattedUsers.slice(0, 50);
     const currentUserRecord = formattedUsers.find((u) => u.id === currentUserId) || null;

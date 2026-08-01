@@ -151,7 +151,7 @@ export async function evaluateHabitDifficulty(
   // Calculate habit-scoped streak volatility (breakDays / scheduledSlots)
   let breakDays = 0;
   for (const dateStr of scheduledDateStrs) {
-    const hasCompletion = completions.some((c) => {
+    const hasCompletion = completions.some((c: { date: Date }) => {
       const cd = new Date(c.date);
       const cStr = `${cd.getUTCFullYear()}-${String(cd.getUTCMonth() + 1).padStart(2, "0")}-${String(cd.getUTCDate()).padStart(2, "0")}`;
       return cStr === dateStr;
@@ -164,7 +164,7 @@ export async function evaluateHabitDifficulty(
 
   // Calculate habit-scoped last-minute rate
   const nonSkipCompletions = completions.filter(
-    (c) => c.timeAccuracy !== "skipped"
+    (c: { timeAccuracy: string }) => c.timeAccuracy !== "skipped"
   );
 
   let lateCount = 0;

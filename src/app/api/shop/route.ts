@@ -36,15 +36,32 @@ export async function GET() {
     });
 
     // Create mappings for fast lookup
-    const ownedItemIds = new Set(inventory.map((inv) => inv.itemId));
-    const equippedItemIds = new Set(inventory.filter((inv) => inv.isEquipped).map((inv) => inv.itemId));
+    const ownedItemIds = new Set(
+      inventory.map((inv: { itemId: string }) => inv.itemId)
+    );
+    const equippedItemIds = new Set(
+      inventory
+        .filter((inv: { isEquipped: boolean }) => inv.isEquipped)
+        .map((inv: { itemId: string }) => inv.itemId)
+    );
 
     // Combine item details with ownership & equip state
-    const result = activeItems.map((item) => ({
-      ...item,
-      owned: ownedItemIds.has(item.id),
-      isEquipped: equippedItemIds.has(item.id),
-    }));
+    const result = activeItems.map(
+      (item: {
+        id: string;
+        name: string;
+        type: string;
+        priceCoins: number;
+        description: string;
+        cssVariables: any;
+        isLimited: boolean;
+        availableUntil: Date | null;
+      }) => ({
+        ...item,
+        owned: ownedItemIds.has(item.id),
+        isEquipped: equippedItemIds.has(item.id),
+      })
+    );
 
     return NextResponse.json(result);
   } catch (error) {

@@ -64,40 +64,69 @@ export async function GET() {
     });
 
     return NextResponse.json({
-      active: activeDuels.map((d) => {
-        const now = new Date();
-        const end = d.endDate ? new Date(d.endDate) : now;
-        const msRemaining = end.getTime() - now.getTime();
-        const daysRemaining = Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
+      active: activeDuels.map(
+        (d: {
+          id: string;
+          habitName: string;
+          startDate: Date | null;
+          endDate: Date | null;
+          challengerId: string;
+          challenger: { displayName: string };
+          challengerCount: number;
+          rivalId: string;
+          rival: { displayName: string };
+          rivalCount: number;
+        }) => {
+          const now = new Date();
+          const end = d.endDate ? new Date(d.endDate) : now;
+          const msRemaining = end.getTime() - now.getTime();
+          const daysRemaining = Math.max(0, Math.ceil(msRemaining / (1000 * 60 * 60 * 24)));
 
-        return {
-          id: d.id,
-          habitName: d.habitName,
-          startDate: d.startDate,
-          endDate: d.endDate,
-          challengerId: d.challengerId,
-          challengerName: d.challenger.displayName,
-          challengerCount: d.challengerCount,
-          rivalId: d.rivalId,
-          rivalName: d.rival.displayName,
-          rivalCount: d.rivalCount,
-          daysRemaining,
-        };
-      }),
-      pendingIncoming: pendingIncoming.map((p) => ({
-        id: p.id,
-        habitName: p.habitName,
-        challengerId: p.challengerId,
-        challengerName: p.challenger.displayName,
-        createdAt: p.createdAt,
-      })),
-      pendingOutgoing: pendingOutgoing.map((p) => ({
-        id: p.id,
-        habitName: p.habitName,
-        rivalId: p.rivalId,
-        rivalName: p.rival.displayName,
-        createdAt: p.createdAt,
-      })),
+          return {
+            id: d.id,
+            habitName: d.habitName,
+            startDate: d.startDate,
+            endDate: d.endDate,
+            challengerId: d.challengerId,
+            challengerName: d.challenger.displayName,
+            challengerCount: d.challengerCount,
+            rivalId: d.rivalId,
+            rivalName: d.rival.displayName,
+            rivalCount: d.rivalCount,
+            daysRemaining,
+          };
+        }
+      ),
+      pendingIncoming: pendingIncoming.map(
+        (p: {
+          id: string;
+          habitName: string;
+          challengerId: string;
+          challenger: { displayName: string };
+          createdAt: Date;
+        }) => ({
+          id: p.id,
+          habitName: p.habitName,
+          challengerId: p.challengerId,
+          challengerName: p.challenger.displayName,
+          createdAt: p.createdAt,
+        })
+      ),
+      pendingOutgoing: pendingOutgoing.map(
+        (p: {
+          id: string;
+          habitName: string;
+          rivalId: string;
+          rival: { displayName: string };
+          createdAt: Date;
+        }) => ({
+          id: p.id,
+          habitName: p.habitName,
+          rivalId: p.rivalId,
+          rivalName: p.rival.displayName,
+          createdAt: p.createdAt,
+        })
+      ),
       stats: {
         wins: stats?.rivalWins || 0,
         losses: stats?.rivalLosses || 0,

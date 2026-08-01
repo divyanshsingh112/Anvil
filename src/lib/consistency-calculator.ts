@@ -69,7 +69,7 @@ export async function calculateConsistencyScore(
         if (days.includes(dayOfWeek)) {
           totalScheduledSlots++;
 
-          const hasCompletion = completions.some((c) => {
+          const hasCompletion = completions.some((c: { habitId: string; date: Date }) => {
             if (c.habitId !== h.id) return false;
             const cDate = new Date(c.date);
             const cStr = `${cDate.getUTCFullYear()}-${String(cDate.getUTCMonth() + 1).padStart(2, "0")}-${String(cDate.getUTCDate()).padStart(2, "0")}`;

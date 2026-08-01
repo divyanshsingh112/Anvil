@@ -60,14 +60,22 @@ export async function GET(request: Request) {
     const items = hasNextPage ? completions.slice(0, limit) : completions;
 
     // Map to a clean, flat response structure
-    const data = items.map((c) => ({
-      id: c.id,
-      date: c.date,
-      completedAt: c.completedAt,
-      note: c.note,
-      habitName: c.habit.name,
-      habitClass: c.habit.class,
-    }));
+    const data = items.map(
+      (c: {
+        id: string;
+        date: Date;
+        completedAt: Date;
+        note: string | null;
+        habit: { name: string; class: string };
+      }) => ({
+        id: c.id,
+        date: c.date,
+        completedAt: c.completedAt,
+        note: c.note,
+        habitName: c.habit.name,
+        habitClass: c.habit.class,
+      })
+    );
 
     return NextResponse.json({
       data,
