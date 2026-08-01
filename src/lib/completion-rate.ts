@@ -75,8 +75,8 @@ export async function calculateCompletionRate(
     },
   });
 
-  // Count completions within the date range
-  const completions: number = await db.completion.count({
+  // Fetch completion records within the date range
+  const rawCompletions = await db.completion.findMany({
     where: {
       userId,
       date: {
@@ -84,7 +84,51 @@ export async function calculateCompletionRate(
         lte: effectiveEnd,
       },
     },
+    select: {
+      habitId: true,
+      date: true,
+    },
   });
+
+  // Filter completions to only include those matching active habit schedules
+  const habitMap = new Map(habits.map((h) => [h.id, h]));
+  let validCompletionsCount = 0;
+
+  for (const comp of rawCompletions) {
+    const habit = habitMap.get(comp.habitId);
+    if (!habit) continue;
+
+    const compDate = new Date(comp.date);
+    const compMs = compDate.getTime();
+
+    const createdDate = new Date(habit.createdAt);
+    const habitCreatedMidnight = Date.UTC(
+      createdDate.getFullYear(),
+      createdDate.getMonth(),
+      createdDate.getDate()
+    );
+    if (habitCreatedMidnight > compMs) continue;
+
+    if (habit.archivedAt) {
+      const archivedDate = new Date(habit.archivedAt);
+      const habitArchivedMidnight = Date.UTC(
+        archivedDate.getFullYear(),
+        archivedDate.getMonth(),
+        archivedDate.getDate()
+      );
+      if (habitArchivedMidnight < compMs) continue;
+    }
+
+    const dayOfWeek = compDate.getUTCDay();
+    const scheduledList =
+      habit.scheduledDays && habit.scheduledDays.length > 0
+        ? habit.scheduledDays
+        : [0, 1, 2, 3, 4, 5, 6];
+
+    if (scheduledList.includes(dayOfWeek)) {
+      validCompletionsCount++;
+    }
+  }
 
   // Calculate total possible completions (the denominator)
   let totalPossible = 0;
@@ -132,12 +176,14 @@ export async function calculateCompletionRate(
     }
   }
 
-  const percentage = totalPossible > 0
-    ? Math.round((completions / totalPossible) * 100)
+  const rawPercentage = totalPossible > 0
+    ? Math.round((validCompletionsCount / totalPossible) * 100)
     : 0;
 
+  const percentage = Math.min(rawPercentage, 100);
+
   return {
-    completions,
+    completions: validCompletionsCount,
     totalPossible,
     percentage,
     hadHabits: habits.length > 0,

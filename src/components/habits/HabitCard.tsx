@@ -51,11 +51,20 @@ export default function HabitCard({
     return cls;
   };
 
-  // Check if completed today (based on server current date matching today)
+  // Check if completed today (timezone-safe calendar date match)
   const now = new Date();
   const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
   
-  const todayCompletion = habit.completions?.find((c) => c.date.startsWith(todayStr));
+  const todayCompletion = habit.completions?.find((c) => {
+    if (!c.date) return false;
+    if (c.date.startsWith(todayStr)) return true;
+    const compDate = new Date(c.date);
+    return (
+      compDate.getUTCFullYear() === now.getFullYear() &&
+      compDate.getUTCMonth() === now.getMonth() &&
+      compDate.getUTCDate() === now.getDate()
+    );
+  });
   const isCompletedToday = !!todayCompletion;
 
   useEffect(() => {
@@ -204,7 +213,7 @@ export default function HabitCard({
             <input
               type="checkbox"
               checked={isCompletedToday}
-              disabled={!isTodayPeriod || isToggling}
+              disabled={!isTodayPeriod || isToggling || !isScheduledToday}
               onChange={handleCheckboxChange}
               className={`h-5 w-5 rounded border cursor-pointer outline-none transition-all accent-purple-600 disabled:opacity-50 disabled:cursor-not-allowed`}
               style={{
