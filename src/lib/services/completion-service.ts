@@ -261,6 +261,56 @@ export async function processCompletionToggle(
     newXp = Math.max(0, newXp - xpReward);
     newLevel = calculateLevel(newXp);
 
+    // Check if a Perfect Day bonus was claimed today that is now broken
+    const userStatsRecord = await tx.userStats.findUnique({
+      where: { userId },
+    });
+
+    const claimedPerfectToday =
+      userStatsRecord?.lastPerfectDay &&
+      new Date(userStatsRecord.lastPerfectDay).getTime() === today.getTime();
+
+    if (claimedPerfectToday) {
+      // Query remaining completions for today after deletion
+      const remainingCompletions = await tx.completion.findMany({
+        where: { userId, date: today },
+        select: { habitId: true },
+      });
+
+      // Query non-archived habits scheduled for today
+      const monthHabits = await tx.habit.findMany({
+        where: {
+          userId,
+          year: today.getUTCFullYear(),
+          month: today.getUTCMonth() + 1,
+          archivedAt: null,
+        },
+      });
+
+      const todayScheduledHabits = monthHabits.filter((h: { scheduledDays: number[] }) => {
+        const days = (h.scheduledDays && h.scheduledDays.length > 0) ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
+        return days.includes(currentDayOfWeek);
+      });
+
+      const stillPerfect =
+        todayScheduledHabits.length > 0 &&
+        remainingCompletions.length === todayScheduledHabits.length;
+
+      if (!stillPerfect) {
+        // Reverse Perfect Day coin reward
+        newCoins = Math.max(0, newCoins - COINS_PER_PERFECT_DAY);
+
+        // Reset lastPerfectDay and decrement perfectDays count on UserStats
+        await tx.userStats.update({
+          where: { userId },
+          data: {
+            perfectDays: Math.max(0, (userStatsRecord.perfectDays || 0) - 1),
+            lastPerfectDay: null,
+          },
+        });
+      }
+    }
+
     // Recalculate Streak on Uncompletion
     const streakCalc = await calculateStreakOnUncompletion(tx, userId, today, user.streak);
     newStreak = streakCalc.newStreak;
