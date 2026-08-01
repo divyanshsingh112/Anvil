@@ -26,7 +26,7 @@ export async function GET() {
 
     // Create a map of achievementId -> unlockedAt for fast lookup
     const unlockedMap = new Map<string, Date>(
-      userAchievements.map((ua) => [ua.achievementId, ua.unlockedAt])
+      userAchievements.map((ua: { achievementId: string; unlockedAt: Date }) => [ua.achievementId, ua.unlockedAt])
     );
 
     // 3. Annotate achievements with unlock status
