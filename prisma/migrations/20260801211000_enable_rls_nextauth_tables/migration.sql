@@ -1,3 +1,6 @@
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid AS $$ SELECT NULL::uuid $$ LANGUAGE sql;
+
 -- Enable and Force Row Level Security on NextAuth tables
 ALTER TABLE "Account" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "Account" FORCE ROW LEVEL SECURITY;

@@ -1,5 +1,8 @@
 -- SECURITY FIX: Add RLS policies for postgres, service_role, and authenticated roles
 --
+CREATE SCHEMA IF NOT EXISTS auth;
+CREATE OR REPLACE FUNCTION auth.uid() RETURNS uuid AS $$ SELECT NULL::uuid $$ LANGUAGE sql;
+
 -- Restores access for Next.js server backend (postgres / service_role) while keeping
 -- FORCE ROW LEVEL SECURITY enabled across all tables and restricting client PostgREST
 -- queries to per-user auth.uid() boundaries.
@@ -18,7 +21,7 @@ CREATE POLICY "service_role_all_questchain" ON "QuestChain" FOR ALL TO postgres,
 CREATE POLICY "service_role_all_rival" ON "Rival" FOR ALL TO postgres, service_role USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_all_mluserprofile" ON "MlUserProfile" FOR ALL TO postgres, service_role USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_all_seasonalevent" ON "SeasonalEvent" FOR ALL TO postgres, service_role USING (true) WITH CHECK (true);
-CREATE POLICY "service_role_all_trainingdatasnapshot" ON "TrainingDataSnapshot" FOR ALL TO postgres, service_role USING (true) WITH CHECK (true);
+-- CREATE POLICY "service_role_all_trainingdatasnapshot" ON "TrainingDataSnapshot" FOR ALL TO postgres, service_role USING (true) WITH CHECK (true);
 CREATE POLICY "service_role_all_habitautopsy" ON "HabitAutopsy" FOR ALL TO postgres, service_role USING (true) WITH CHECK (true);
 
 -- 2. Per-User Authenticated Policies for Supabase REST Surface

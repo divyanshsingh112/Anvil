@@ -42,7 +42,7 @@ ALTER TABLE "MlUserProfile" ENABLE ROW LEVEL SECURITY;
 ALTER TABLE "SeasonalEvent" ENABLE ROW LEVEL SECURITY;
 
 -- Training data (privacy-sensitive anonymized snapshots)
-ALTER TABLE "TrainingDataSnapshot" ENABLE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS "TrainingDataSnapshot" ENABLE ROW LEVEL SECURITY;
 
 -- Force RLS for table owners too (belt-and-suspenders for non-superuser roles)
 ALTER TABLE "User" FORCE ROW LEVEL SECURITY;
@@ -58,4 +58,4 @@ ALTER TABLE "QuestChain" FORCE ROW LEVEL SECURITY;
 ALTER TABLE "Rival" FORCE ROW LEVEL SECURITY;
 ALTER TABLE "MlUserProfile" FORCE ROW LEVEL SECURITY;
 ALTER TABLE "SeasonalEvent" FORCE ROW LEVEL SECURITY;
-ALTER TABLE "TrainingDataSnapshot" FORCE ROW LEVEL SECURITY;
+ALTER TABLE IF EXISTS "TrainingDataSnapshot" FORCE ROW LEVEL SECURITY;

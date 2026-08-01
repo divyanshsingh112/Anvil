@@ -129,6 +129,7 @@ model Completion {
   habit Habit @relation(fields: [habitId], references: [id], onDelete: Cascade)
   user  User  @relation(fields: [userId], references: [id], onDelete: Cascade)
 
+  @@unique([userId, habitId, date])
   @@index([userId, date])
   @@index([habitId, date])
 }

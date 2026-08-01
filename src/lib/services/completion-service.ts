@@ -149,11 +149,20 @@ export async function processCompletionToggle(
         else derivedTimeBucket = "night";
       }
 
-      completion = await tx.completion.create({
-        data: {
+      completion = await tx.completion.upsert({
+        where: {
+          userId_habitId_date: { userId, habitId, date: today },
+        },
+        create: {
           habitId,
           userId,
           date: today,
+          loggedAt: now,
+          completedAt: completedAtDate,
+          timeBucket: derivedTimeBucket || "morning",
+          timeAccuracy: derivedTimeAccuracy,
+        },
+        update: {
           loggedAt: now,
           completedAt: completedAtDate,
           timeBucket: derivedTimeBucket || "morning",
