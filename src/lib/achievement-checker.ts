@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { getISTDayOfWeek } from "@/lib/date-utils";
 
 export interface UnlockedAchievement {
   key: string;
@@ -143,7 +144,7 @@ async function checkPerfectWeek(tx: Prisma.TransactionClient, userId: string): P
 
   for (let i = 0; i < 7; i++) {
     const checkDate = new Date(today.getTime() - i * 24 * 60 * 60 * 1000);
-    const dayOfWeek = checkDate.getUTCDay();
+    const dayOfWeek = getISTDayOfWeek(checkDate);
 
     // 1. Get habits active on checkDate
     const habits = await tx.habit.findMany({

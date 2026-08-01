@@ -1,4 +1,5 @@
 import { Prisma, User } from "@prisma/client";
+import { getISTDayOfWeek } from "@/lib/date-utils";
 
 /**
  * Lazy-checks and applies:
@@ -64,7 +65,7 @@ export async function checkAndApplyStreakDecayAndRecharge(
 
   // 3. Day-over-day Streak Decay Check
   // Check if yesterday was a scheduled day for any active habit for this user
-  const yesterdayDow = yesterday.getUTCDay();
+  const yesterdayDow = getISTDayOfWeek(yesterday);
 
   const activeHabitsYesterday = await tx.habit.findMany({
     where: {

@@ -1,6 +1,7 @@
 import { create } from "zustand";
 import { Habit, HabitClass, HabitDifficulty, ToggleResponse } from "@/types";
 import { useUserStore } from "@/store/useUserStore";
+import { isSameISTDay } from "@/lib/date-utils";
 
 interface HabitStore {
   habits: Habit[];
@@ -214,7 +215,7 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
         
         if (completed) {
           // If already completed for today, do not duplicate
-          if (currentCompletions.some((c) => c.date.startsWith(todayStr))) {
+          if (currentCompletions.some((c) => c.date && isSameISTDay(c.date, now))) {
             return h;
           }
           
@@ -231,7 +232,7 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
           };
           nextCompletions = [...currentCompletions, optimisticCompletion];
         } else {
-          nextCompletions = currentCompletions.filter((c) => !c.date.startsWith(todayStr));
+          nextCompletions = currentCompletions.filter((c) => !c.date || !isSameISTDay(c.date, now));
         }
 
         return { ...h, completions: nextCompletions };
@@ -278,7 +279,7 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
               c.id.startsWith("temp-comp-") ? completion : c
             );
           } else {
-            nextCompletions = currentCompletions.filter((c) => !c.date.startsWith(todayStr));
+            nextCompletions = currentCompletions.filter((c) => !c.date || !isSameISTDay(c.date, now));
           }
           return { ...h, completions: nextCompletions };
         }),

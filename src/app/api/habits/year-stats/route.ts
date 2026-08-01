@@ -2,6 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
+import { getISTDayOfWeek } from "@/lib/date-utils";
 
 export const dynamic = "force-dynamic";
 
@@ -110,7 +111,7 @@ export async function GET(request: Request) {
 
           for (let day = startDay; day <= endDay; day++) {
             const date = new Date(year, month - 1, day);
-            const dow = date.getDay(); // 0=Sun, 6=Sat
+            const dow = getISTDayOfWeek(date); // 0=Sun, 6=Sat
 
             // Check scheduledDays schedule
             const days = habit.scheduledDays && habit.scheduledDays.length > 0 ? habit.scheduledDays : [0, 1, 2, 3, 4, 5, 6];

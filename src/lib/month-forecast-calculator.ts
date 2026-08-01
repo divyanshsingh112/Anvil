@@ -1,4 +1,5 @@
 import { calculateCompletionRate } from "./completion-rate";
+import { getISTDayOfWeek } from "@/lib/date-utils";
 
 export interface MonthForecastResult {
   year: number;
@@ -112,7 +113,7 @@ export async function calculateMonthForecast(
 
   for (let i = 1; i <= daysRemaining; i++) {
     const checkDay = new Date(today.getTime() + i * MS_PER_DAY);
-    const dayOfWeek = checkDay.getUTCDay();
+    const dayOfWeek = getISTDayOfWeek(checkDay);
 
     for (const h of habits) {
       const created = new Date(h.createdAt);

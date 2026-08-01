@@ -1,5 +1,6 @@
 import { createHash } from "crypto";
 import { Prisma } from "@prisma/client";
+import { getISTDayOfWeek } from "@/lib/date-utils";
 
 /**
  * Calculates a deterministic, rotating random-looking string for a user's anonId
@@ -94,7 +95,7 @@ export async function exportAnonymizedSnapshot(userId: string): Promise<any> {
   const start14DaysAgo = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000);
   for (let i = 0; i < 14; i++) {
     const checkDay = new Date(start14DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayOfWeek = checkDay.getDay(); // 0 = Sunday, 1 = Monday...
+    const dayOfWeek = getISTDayOfWeek(checkDay); // 0 = Sunday, 1 = Monday...
     for (const h of habits) {
       const days = (h.scheduledDays && h.scheduledDays.length > 0) ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
       if (days.includes(dayOfWeek)) {
@@ -110,7 +111,7 @@ export async function exportAnonymizedSnapshot(userId: string): Promise<any> {
   // --- Calculate weekdayVariance in the last 30 days ---
   const countsPerDayOfWeek = [0, 0, 0, 0, 0, 0, 0];
   for (const c of completionsLast30) {
-    const day = new Date(c.date).getDay();
+    const day = getISTDayOfWeek(c.date);
     countsPerDayOfWeek[day]++;
   }
 

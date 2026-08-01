@@ -4,6 +4,7 @@ import { useState } from "react";
 import { Habit, ResolvedChain } from "@/types";
 import { useLabels } from "@/hooks/useLabels";
 import { Trash2, Link, Check, Loader2 } from "lucide-react";
+import { isSameISTDay } from "@/lib/date-utils";
 
 interface ChainCardProps {
   chain: ResolvedChain;
@@ -17,12 +18,10 @@ export default function ChainCard({
   const labels = useLabels();
   const [isDeleting, setIsDeleting] = useState(false);
 
-  // Get current date string in local timezone matching server date (YYYY-MM-DD)
   const now = new Date();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
 
   const isHabitCompletedToday = (habit: Habit) => {
-    return !!habit.completions?.some((c) => c.date.startsWith(todayStr));
+    return !!habit.completions?.some((c) => c.date && isSameISTDay(c.date, now));
   };
 
   const completedCount = chain.habits.filter(isHabitCompletedToday).length;

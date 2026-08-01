@@ -3,6 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { calculateMomentumScore } from "@/lib/momentum-calculator";
+import { getISTDayOfWeek } from "@/lib/date-utils";
 
 export async function GET() {
   try {
@@ -107,7 +108,7 @@ export async function GET() {
       // Sum scheduled days
       for (let i = 0; i < 7; i++) {
         const checkDay = new Date(start7DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-        const dayOfWeek = checkDay.getDay();
+        const dayOfWeek = getISTDayOfWeek(checkDay);
         for (const h of habits) {
           const hClass = h.class as keyof typeof scheduledCounts;
           const days = h.scheduledDays && h.scheduledDays.length > 0 ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];

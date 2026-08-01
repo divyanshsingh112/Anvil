@@ -49,6 +49,9 @@ const MIN_ACCOUNT_AGE_DAYS = 14;
  * Classifies a user into a behavioral archetype.
  * Returns "insufficient_data" if the user doesn't meet minimum thresholds.
  */
+import { PrismaClient } from "@prisma/client";
+import { getISTDayOfWeek } from "@/lib/date-utils";
+
 export async function classifyArchetype(
   userId: string,
   targetDateInput?: Date
@@ -131,7 +134,7 @@ export async function classifyArchetype(
   // Build scheduled slots with createdAt guard (Phase 19 bug class prevention)
   for (let i = 0; i < 30; i++) {
     const checkDay = new Date(start30DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayOfWeek = checkDay.getDay(); // 0=Sun, 6=Sat
+    const dayOfWeek = getISTDayOfWeek(checkDay); // 0=Sun, 6=Sat
     const isWeekend = dayOfWeek === 0 || dayOfWeek === 6;
 
     for (const h of habits) {
@@ -152,7 +155,7 @@ export async function classifyArchetype(
   // Count completions by weekday/weekend (using all completions including skip
   // since we're measuring engagement, not timing)
   for (const c of completions) {
-    const cDay = new Date(c.date).getDay();
+    const cDay = getISTDayOfWeek(c.date);
     const isWeekend = cDay === 0 || cDay === 6;
     if (isWeekend) weekendCompleted++;
     else weekdayCompleted++;
@@ -181,7 +184,7 @@ export async function classifyArchetype(
 
   for (let i = 0; i < 30; i++) {
     const checkDay = new Date(start30DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayOfWeek = checkDay.getDay();
+    const dayOfWeek = getISTDayOfWeek(checkDay);
     const dateStr = `${checkDay.getUTCFullYear()}-${String(checkDay.getUTCMonth() + 1).padStart(2, "0")}-${String(checkDay.getUTCDate()).padStart(2, "0")}`;
 
     // Count scheduled habits for this day (with createdAt guard)

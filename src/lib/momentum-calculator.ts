@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { getISTDayOfWeek } from "@/lib/date-utils";
 
 /**
  * Computes the Momentum Score (0-100) for a user based on 5 weighted factors.
@@ -79,10 +80,10 @@ export async function calculateMomentumScore(userId: string, targetDateInput?: D
 
   for (let i = 0; i < 14; i++) {
     const checkDayR1 = new Date(start14DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayOfWeekR1 = checkDayR1.getDay();
+    const dayOfWeekR1 = getISTDayOfWeek(checkDayR1);
     
     const checkDayR2 = new Date(start28DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayOfWeekR2 = checkDayR2.getDay();
+    const dayOfWeekR2 = getISTDayOfWeek(checkDayR2);
 
     for (const h of habits) {
       // Check if habit was created before/during this day and not archived yet
@@ -124,14 +125,14 @@ export async function calculateMomentumScore(userId: string, targetDateInput?: D
   for (let d = 0; d < 7; d++) {
     const dayCompletions = completions.filter((c: { date: Date }) => {
       const cDate = new Date(c.date);
-      return cDate >= start28DaysAgo && cDate.getDay() === d;
+      return cDate >= start28DaysAgo && getISTDayOfWeek(cDate) === d;
     }).length;
 
     let dayScheduled = 0;
     // Over the last 28 days, each weekday occurs exactly 4 times
     for (let i = 0; i < 28; i++) {
       const checkDay = new Date(start28DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-      if (checkDay.getDay() === d) {
+      if (getISTDayOfWeek(checkDay) === d) {
         for (const h of habits) {
           const created = new Date(h.createdAt);
           const archived = h.archivedAt ? new Date(h.archivedAt) : null;

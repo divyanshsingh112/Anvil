@@ -6,6 +6,8 @@
  * respecting a 14-day cooldown and minimum data threshold (≥14 days age, ≥10 scheduled slots).
  */
 
+import { getISTDayOfWeek } from "@/lib/date-utils";
+
 export type RecommendationType = "suggest_harder" | "suggest_easier" | "none";
 export type EvaluatorStatus = "eligible" | "insufficient_data" | "cooldown";
 
@@ -104,7 +106,7 @@ export async function evaluateHabitDifficulty(
 
   for (let i = 0; i < 30; i++) {
     const checkDay = new Date(start30DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayOfWeek = checkDay.getUTCDay();
+    const dayOfWeek = getISTDayOfWeek(checkDay);
 
     const created = new Date(habit.createdAt);
     const archived = habit.archivedAt ? new Date(habit.archivedAt) : null;

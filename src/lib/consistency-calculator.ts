@@ -1,4 +1,5 @@
 import { PrismaClient } from "@prisma/client";
+import { getISTDayOfWeek } from "@/lib/date-utils";
 
 /**
  * Calculates a user's Consistency Score (0-100%) based on scheduled days over the past 30 days.
@@ -56,7 +57,7 @@ export async function calculateConsistencyScore(
 
   for (let i = 0; i < 30; i++) {
     const checkDay = new Date(start29DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayOfWeek = checkDay.getUTCDay();
+    const dayOfWeek = getISTDayOfWeek(checkDay);
     const dateStr = `${checkDay.getUTCFullYear()}-${String(checkDay.getUTCMonth() + 1).padStart(2, "0")}-${String(checkDay.getUTCDate()).padStart(2, "0")}`;
 
     for (const h of habits) {

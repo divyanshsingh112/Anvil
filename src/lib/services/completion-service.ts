@@ -1,5 +1,6 @@
 import { Prisma, Completion } from "@prisma/client";
 import { toZonedTime } from "date-fns-tz";
+import { getISTDayOfWeek } from "@/lib/date-utils";
 import { XP_PER_COMPLETION, COINS_PER_PERFECT_DAY, calculateLevel } from "@/lib/gamification-constants";
 import { calculateStreakOnCompletion, calculateStreakOnUncompletion } from "@/lib/streak-calculator";
 import { checkAndApplyStreakDecayAndRecharge } from "@/lib/streak-decay";
@@ -68,7 +69,7 @@ export async function processCompletionToggle(
   const month = nowIST.getMonth();
   const dateVal = nowIST.getDate();
   const today = new Date(Date.UTC(year, month, dateVal));
-  const currentDayOfWeek = nowIST.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday (IST)
+  const currentDayOfWeek = getISTDayOfWeek(now);
 
   // Check existing completion for today
   const existingCompletion = await tx.completion.findFirst({

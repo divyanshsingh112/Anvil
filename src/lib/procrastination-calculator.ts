@@ -1,4 +1,5 @@
 import { Prisma } from "@prisma/client";
+import { getISTDayOfWeek } from "@/lib/date-utils";
 
 export interface AvoidancePattern {
   avoidedClass: string;
@@ -144,7 +145,7 @@ export async function calculateProcrastinationFingerprint(
   let totalScheduledSlots = 0;
   for (let i = 0; i < 30; i++) {
     const checkDay = new Date(start30DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayOfWeek = checkDay.getDay();
+    const dayOfWeek = getISTDayOfWeek(checkDay);
 
     for (const h of habits) {
       const created = new Date(h.createdAt);
@@ -207,7 +208,7 @@ export async function calculateProcrastinationFingerprint(
 
   for (let i = 0; i < 30; i++) {
     const checkDay = new Date(start30DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
-    const dayOfWeek = checkDay.getDay();
+    const dayOfWeek = getISTDayOfWeek(checkDay);
     const dateStr = `${checkDay.getUTCFullYear()}-${String(checkDay.getUTCMonth() + 1).padStart(2, "0")}-${String(checkDay.getUTCDate()).padStart(2, "0")}`;
 
     dailyScheduled[dateStr] = [];
