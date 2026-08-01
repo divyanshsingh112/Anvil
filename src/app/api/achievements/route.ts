@@ -30,19 +30,28 @@ export async function GET() {
     );
 
     // 3. Annotate achievements with unlock status
-    const result = allAchievements.map((ach) => {
-      const unlockedAt = unlockedMap.get(ach.id) || null;
-      return {
-        id: ach.id,
-        key: ach.key,
-        name: ach.name,
-        description: ach.description,
-        xpReward: ach.xpReward,
-        icon: ach.icon,
-        unlocked: !!unlockedAt,
-        unlockedAt: unlockedAt ? unlockedAt.toISOString() : null,
-      };
-    });
+    const result = allAchievements.map(
+      (ach: {
+        id: string;
+        key: string;
+        name: string;
+        description: string;
+        xpReward: number;
+        icon: string;
+      }) => {
+        const unlockedAt = unlockedMap.get(ach.id) || null;
+        return {
+          id: ach.id,
+          key: ach.key,
+          name: ach.name,
+          description: ach.description,
+          xpReward: ach.xpReward,
+          icon: ach.icon,
+          unlocked: !!unlockedAt,
+          unlockedAt: unlockedAt ? unlockedAt.toISOString() : null,
+        };
+      }
+    );
 
     return NextResponse.json(result);
   } catch (error) {
