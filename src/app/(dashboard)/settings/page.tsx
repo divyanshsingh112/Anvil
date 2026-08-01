@@ -2,8 +2,10 @@
 
 import { useEffect, useState } from "react";
 import { ShieldCheck, Swords, Info, Loader2, Save, HelpCircle } from "lucide-react";
+import { useLabels } from "@/hooks/useLabels";
 
 export default function SettingsPage() {
+  const labels = useLabels();
   const [consent, setConsent] = useState(false);
   const [allowChallenges, setAllowChallenges] = useState(true);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
@@ -252,9 +254,9 @@ export default function SettingsPage() {
                   <h4 className="font-extrabold text-white uppercase tracking-wider text-[10px]">What is STRICTLY NEVER Shared</h4>
                   <ul className="list-disc pl-4 mt-1.5 flex flex-col gap-1 text-slate-400">
                     <li>Your real name, display name, or email address.</li>
-                    <li>The text titles, descriptions, or names of your habits.</li>
-                    <li>Free-text comments, notes, or entries in your Quest Journal.</li>
-                    <li>Opponent/rival names, profiles, or relationships.</li>
+                    <li>The text titles, descriptions, or names of your {labels.habitPlural.toLowerCase()}.</li>
+                    <li>Free-text comments, notes, or entries in your {labels.habitSingular === "Quest" ? "Quest Journal" : `${labels.habitSingular} Journal`}.</li>
+                    <li>Opponent/{labels.rivalLabel.toLowerCase()} names, profiles, or relationships.</li>
                     <li>Exact timestamps of habit completions (only aggregated time buckets).</li>
                     <li>IP addresses, locations, or hardware fingerprinting details.</li>
                   </ul>

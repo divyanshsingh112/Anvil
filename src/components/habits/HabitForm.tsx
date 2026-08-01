@@ -83,11 +83,11 @@ export default function HabitForm({
 
     // Client-side validations
     if (!name || name.trim().length === 0) {
-      setError("Quest name is required");
+      setError(`${labels.habitSingular} name is required`);
       return;
     }
     if (name.length > 50) {
-      setError("Quest name must be 50 characters or less");
+      setError(`${labels.habitSingular} name must be 50 characters or less`);
       return;
     }
 
@@ -122,38 +122,16 @@ export default function HabitForm({
   };
 
   const getFormTitle = () => {
-    if (labels.habitSingular === "Quest") return mode === "create" ? "Forge New Quest" : "Reforge Quest";
-    if (labels.habitSingular === "Lap") return mode === "create" ? "Start New Lap" : "Tune Lap";
-    if (labels.habitSingular === "Drill") return mode === "create" ? "Plan New Drill" : "Review Drill";
-    return mode === "create" ? "Create New Habit" : "Edit Habit";
+    return mode === "create" ? labels.createActionLabel : `Edit ${labels.habitSingular}`;
   };
 
   const getClassLabel = () => {
-    if (labels.habitSingular === "Quest") return "Hero Class";
-    if (labels.habitSingular === "Lap") return "Racing Spec";
-    if (labels.habitSingular === "Drill") return "Drill Type";
-    return "Category";
+    return labels.classSelectorLabel;
   };
 
   const getButtonText = () => {
-    if (labels.habitSingular === "Quest") {
-      return isSubmitting
-        ? (mode === "create" ? "Forging..." : "Reforging...")
-        : (mode === "create" ? "Forge Quest" : "Reforge");
-    }
-    if (labels.habitSingular === "Lap") {
-      return isSubmitting
-        ? (mode === "create" ? "Starting..." : "Tuning...")
-        : (mode === "create" ? "Start Lap" : "Tune");
-    }
-    if (labels.habitSingular === "Drill") {
-      return isSubmitting
-        ? (mode === "create" ? "Planning..." : "Reviewing...")
-        : (mode === "create" ? "Plan Drill" : "Review");
-    }
-    return isSubmitting
-      ? "Saving..."
-      : (mode === "create" ? "Save Habit" : "Save");
+    if (isSubmitting) return "Saving...";
+    return mode === "create" ? labels.createActionLabel : "Save";
   };
 
   return (

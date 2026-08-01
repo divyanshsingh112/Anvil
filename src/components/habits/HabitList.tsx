@@ -33,17 +33,11 @@ export default function HabitList({
   const labels = useLabels();
 
   const getEmptyMessage = () => {
-    if (labels.habitSingular === "Quest") return "No quests yet — forge your first one";
-    if (labels.habitSingular === "Lap") return "No laps yet — start your first one";
-    if (labels.habitSingular === "Drill") return "No drills yet — plan your first one";
-    return "No habits yet — create your first one";
+    return labels.emptyStateLabel;
   };
 
   const getButtonText = () => {
-    if (labels.habitSingular === "Quest") return "Forge New Quest";
-    if (labels.habitSingular === "Lap") return "Start New Lap";
-    if (labels.habitSingular === "Drill") return "Plan New Drill";
-    return "Create New Habit";
+    return labels.createActionLabel;
   };
 
   if (habits.length === 0) {

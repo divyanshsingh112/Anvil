@@ -21,6 +21,9 @@ export interface TerminologyPack {
   chainPlural: string;
   rivalLabel: string;
   rivalPlural: string;
+  createActionLabel: string;
+  emptyStateLabel: string;
+  classSelectorLabel: string;
   iconWarrior: string; // lucide icon name
   iconMage: string;
   iconRogue: string;
@@ -50,6 +53,9 @@ export const terminologyPacks: Record<string, TerminologyPack> = {
     chainPlural: "Routines",
     rivalLabel: "Rival",
     rivalPlural: "Rivals",
+    createActionLabel: "Create Habit",
+    emptyStateLabel: "No habits yet — add your first one",
+    classSelectorLabel: "Category",
     iconWarrior: "Dumbbell",
     iconMage: "BookOpen",
     iconRogue: "Shuffle",
@@ -77,6 +83,9 @@ export const terminologyPacks: Record<string, TerminologyPack> = {
     chainPlural: "Quest Chains",
     rivalLabel: "Rival",
     rivalPlural: "Rivals",
+    createActionLabel: "Forge New Quest",
+    emptyStateLabel: "No quests yet — forge your first one",
+    classSelectorLabel: "Hero Class",
     iconWarrior: "Sword",
     iconMage: "Sparkles",
     iconRogue: "Zap",
@@ -104,6 +113,9 @@ export const terminologyPacks: Record<string, TerminologyPack> = {
     chainPlural: "Circuits",
     rivalLabel: "Rival",
     rivalPlural: "Rivals",
+    createActionLabel: "Start New Lap",
+    emptyStateLabel: "No laps yet — start your first one",
+    classSelectorLabel: "Vehicle Spec",
     iconWarrior: "Gauge",
     iconMage: "Route",
     iconRogue: "Wrench",
@@ -131,6 +143,9 @@ export const terminologyPacks: Record<string, TerminologyPack> = {
     chainPlural: "Combos",
     rivalLabel: "Rival",
     rivalPlural: "Rivals",
+    createActionLabel: "Run New Drill",
+    emptyStateLabel: "No drills yet — run your first one",
+    classSelectorLabel: "Athlete Role",
     iconWarrior: "Dumbbell",
     iconMage: "Target",
     iconRogue: "Zap",

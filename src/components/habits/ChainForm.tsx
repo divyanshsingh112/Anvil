@@ -31,15 +31,11 @@ export default function ChainForm({
   };
 
   const getFormTitle = () => {
-    if (labels.habitSingular === "Quest") return `Forge ${labels.chainLabel}`;
-    if (labels.habitSingular === "Lap") return `Assemble ${labels.chainLabel}`;
-    if (labels.habitSingular === "Drill") return `Group ${labels.chainLabel}`;
     return `Create ${labels.chainLabel}`;
   };
 
   const getSubmitButtonText = () => {
     if (isSubmitting) return "Saving...";
-    if (labels.habitSingular === "Quest") return `Forge ${labels.chainLabel}`;
     return `Create ${labels.chainLabel}`;
   };
 

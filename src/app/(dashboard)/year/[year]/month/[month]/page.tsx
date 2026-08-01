@@ -431,7 +431,7 @@ export default function MonthTrackerPage() {
               style={{ backgroundColor: "var(--accent-purple)" }}
             >
               <Plus className="h-4 w-4" />
-              New {labels.habitSingular}
+              {labels.createActionLabel}
             </button>
           )}
         </div>
