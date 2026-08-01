@@ -1,4 +1,5 @@
 import type { Metadata } from "next";
+import { Analytics } from "@vercel/analytics/next";
 import AuthProvider from "@/components/shared/AuthProvider";
 import ThemeApplier from "@/components/gamification/ThemeApplier";
 import "./globals.css";
@@ -20,6 +21,7 @@ export default function RootLayout({
           <ThemeApplier />
           {children}
         </AuthProvider>
+        <Analytics />
       </body>
     </html>
   );
