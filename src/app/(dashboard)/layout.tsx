@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useEffect } from "react";
 import { signOut } from "next-auth/react";
-import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen, LogOut } from "lucide-react";
+import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen, LogOut, Users } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
 
 export default function DashboardLayout({
@@ -24,6 +24,7 @@ export default function DashboardLayout({
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: Swords },
     { label: labels.habitSingular === "Quest" ? "Journal" : `${labels.habitSingular} Journal`, href: "/journal", icon: BookOpen },
+    { label: "Rivals", href: "/rivals", icon: Users },
     { label: "Shop", href: "/shop", icon: ShoppingBag },
     { label: labels.leaderboardLabel, href: "/leaderboard", icon: Trophy },
     { label: "Profile", href: "/profile", icon: User },
