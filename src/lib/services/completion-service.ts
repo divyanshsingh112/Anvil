@@ -1,9 +1,12 @@
 import { Prisma, Completion } from "@prisma/client";
+import { toZonedTime } from "date-fns-tz";
 import { XP_PER_COMPLETION, COINS_PER_PERFECT_DAY, calculateLevel } from "@/lib/gamification-constants";
 import { calculateStreakOnCompletion, calculateStreakOnUncompletion } from "@/lib/streak-calculator";
 import { checkAndApplyStreakDecayAndRecharge } from "@/lib/streak-decay";
 import { checkAchievements, UnlockedAchievement } from "@/lib/achievement-checker";
 import { calculateAttributeScores } from "@/lib/attribute-calculator";
+
+const IST = "Asia/Kolkata";
 
 export interface ProcessToggleResult {
   completion: Completion | null;
@@ -60,11 +63,12 @@ export async function processCompletionToggle(
   }
 
   const now = new Date();
-  const year = now.getFullYear();
-  const month = now.getMonth();
-  const dateVal = now.getDate();
+  const nowIST = toZonedTime(now, IST);
+  const year = nowIST.getFullYear();
+  const month = nowIST.getMonth();
+  const dateVal = nowIST.getDate();
   const today = new Date(Date.UTC(year, month, dateVal));
-  const currentDayOfWeek = now.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday
+  const currentDayOfWeek = nowIST.getDay(); // 0 = Sunday, 1 = Monday, ..., 6 = Saturday (IST)
 
   // Check existing completion for today
   const existingCompletion = await tx.completion.findFirst({
@@ -281,8 +285,8 @@ export async function processCompletionToggle(
       const monthHabits = await tx.habit.findMany({
         where: {
           userId,
-          year: today.getUTCFullYear(),
-          month: today.getUTCMonth() + 1,
+          year,
+          month: month + 1,
           archivedAt: null,
         },
       });
@@ -391,11 +395,12 @@ async function checkPerfectDayCondition(
   }
 
   // Find all non-archived habits for this month
+  const todayIST = toZonedTime(today, IST);
   const monthHabits = await tx.habit.findMany({
     where: {
       userId,
-      year: today.getUTCFullYear(),
-      month: today.getUTCMonth() + 1,
+      year: todayIST.getFullYear(),
+      month: todayIST.getMonth() + 1,
       archivedAt: null,
     },
   });
