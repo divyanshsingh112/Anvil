@@ -50,10 +50,7 @@ const MIN_ACCOUNT_AGE_DAYS = 14;
  * Returns "insufficient_data" if the user doesn't meet minimum thresholds.
  */
 import { PrismaClient } from "@prisma/client";
-import { toZonedTime } from "date-fns-tz";
-import { getISTDayOfWeek } from "@/lib/date-utils";
-
-const IST = "Asia/Kolkata";
+import { getISTDayOfWeek, getISTDateParts } from "@/lib/date-utils";
 
 export async function classifyArchetype(
   userId: string,
@@ -61,10 +58,11 @@ export async function classifyArchetype(
 ): Promise<ClassificationResult> {
   const { prisma } = await import("./prisma");
 
-  const todayIST = toZonedTime(targetDateInput ? new Date(targetDateInput) : new Date(), IST);
-  todayIST.setHours(0, 0, 0, 0);
+  const targetDate = targetDateInput ? new Date(targetDateInput) : new Date();
+  const todayParts = getISTDateParts(targetDate);
+  const todayMidnight = Date.UTC(todayParts.year, todayParts.month, todayParts.day);
 
-  const start30DaysAgo = new Date(todayIST.getTime() - 30 * 24 * 60 * 60 * 1000);
+  const start30DaysAgo = new Date(todayMidnight - 30 * 24 * 60 * 60 * 1000);
 
   // ── 1. Check account age threshold ────────────────────────────────
 
@@ -82,11 +80,11 @@ export async function classifyArchetype(
     };
   }
 
-  const createdAtIST = toZonedTime(new Date(user.createdAt), IST);
-  createdAtIST.setHours(0, 0, 0, 0);
+  const createdParts = getISTDateParts(new Date(user.createdAt));
+  const createdMidnight = Date.UTC(createdParts.year, createdParts.month, createdParts.day);
 
   const accountAgeDays = Math.floor(
-    (todayIST.getTime() - createdAtIST.getTime()) / (24 * 60 * 60 * 1000)
+    (todayMidnight - createdMidnight) / (24 * 60 * 60 * 1000)
   );
 
   // ── 2. Fetch completions in the last 30 days ─────────────────────
@@ -94,7 +92,7 @@ export async function classifyArchetype(
   const completions = await prisma.completion.findMany({
     where: {
       userId,
-      date: { gte: start30DaysAgo, lte: todayIST },
+      date: { gte: start30DaysAgo, lte: new Date(todayMidnight) },
     },
     include: { habit: true },
   });

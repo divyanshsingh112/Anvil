@@ -24,3 +24,16 @@ export function isSameISTDay(
   const dB = typeof dateB === "string" || typeof dateB === "number" ? new Date(dateB) : dateB;
   return isSameDay(toZonedTime(dA, IST), toZonedTime(dB, IST));
 }
+
+/**
+ * Returns year, month (0-indexed), and day of month for a date in Asia/Kolkata (IST) timezone.
+ */
+export function getISTDateParts(date: Date | string | number): { year: number; month: number; day: number } {
+  const d = typeof date === "string" || typeof date === "number" ? new Date(date) : date;
+  const zoned = toZonedTime(d, IST);
+  return {
+    year: zoned.getFullYear(),
+    month: zoned.getMonth(),
+    day: zoned.getDate(),
+  };
+}
