@@ -3,6 +3,7 @@
 import { Habit, ToggleResponse } from "@/types";
 import HabitCard from "./HabitCard";
 import { useLabels } from "@/hooks/useLabels";
+import { Plus } from "lucide-react";
 
 interface HabitListProps {
   habits: Habit[];
@@ -77,6 +78,34 @@ export default function HabitList({
           isTodayPeriod={isTodayPeriod}
         />
       ))}
+
+      {isTodayPeriod && (
+        <button
+          onClick={onCreateQuestClick}
+          className="group flex flex-col items-center justify-center min-h-[220px] rounded-xl border border-dashed p-6 text-center transition-all duration-200 hover:border-purple-500/50 hover:bg-purple-500/5"
+          style={{
+            backgroundColor: "var(--bg-secondary)",
+            borderColor: "var(--border)",
+          }}
+        >
+          <div
+            className="flex h-12 w-12 items-center justify-center rounded-xl border mb-3 transition-transform group-hover:scale-110"
+            style={{
+              backgroundColor: "rgba(168, 85, 247, 0.15)",
+              borderColor: "rgba(168, 85, 247, 0.3)",
+              color: "#c084fc",
+            }}
+          >
+            <Plus className="h-6 w-6" />
+          </div>
+          <span className="text-sm font-bold text-white group-hover:text-purple-300">
+            {getButtonText()}
+          </span>
+          <span className="text-xs mt-1" style={{ color: "var(--text-muted)" }}>
+            Add another active habit to your journal
+          </span>
+        </button>
+      )}
     </div>
   );
 }
