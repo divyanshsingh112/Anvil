@@ -5,8 +5,23 @@ import { PrismaAdapter } from "@next-auth/prisma-adapter";
 import bcrypt from "bcryptjs";
 import { prisma } from "@/lib/prisma";
 
+const baseAdapter = PrismaAdapter(prisma);
+const adapter = {
+  ...baseAdapter,
+  createUser: (data: any) => {
+    const { name, image, ...rest } = data;
+    return prisma.user.create({
+      data: {
+        ...rest,
+        displayName: name || rest.email?.split("@")[0] || "Hero",
+        avatarUrl: image || null,
+      },
+    });
+  },
+};
+
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma),
+  adapter: adapter as any,
   providers: [
     CredentialsProvider({
       name: "credentials",
