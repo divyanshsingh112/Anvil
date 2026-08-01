@@ -119,7 +119,7 @@ export async function calculateCompletionRate(
       if (habitArchivedMidnight < compMs) continue;
     }
 
-    const dayOfWeek = compDate.getUTCDay();
+    const dayOfWeek = compDate.getDay();
     const scheduledList =
       habit.scheduledDays && habit.scheduledDays.length > 0
         ? habit.scheduledDays
@@ -166,7 +166,7 @@ export async function calculateCompletionRate(
       if (habitArchivedMidnight !== null && habitArchivedMidnight < currentDayMs) continue;
 
       // Check schedule
-      const dayOfWeek = currentDay.getUTCDay();
+      const dayOfWeek = currentDay.getDay();
       const scheduledList = (habit.scheduledDays && habit.scheduledDays.length > 0) ? habit.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
       if (!scheduledList.includes(dayOfWeek)) {
         continue;

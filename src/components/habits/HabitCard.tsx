@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { isSameDay } from "date-fns";
 import { Habit, ToggleResponse } from "@/types";
 import { Sword, Sparkles, Zap, Edit2, Trash2, Clock, MessageSquare, Check, Loader2 } from "lucide-react";
 import { useHabitStore } from "@/store/useHabitStore";
@@ -51,20 +52,11 @@ export default function HabitCard({
     return cls;
   };
 
-  // Check if completed today (timezone-safe calendar date match)
+  // Check if completed today using date-fns isSameDay
   const now = new Date();
-  const todayStr = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(now.getDate()).padStart(2, "0")}`;
-  
-  const todayCompletion = habit.completions?.find((c) => {
-    if (!c.date) return false;
-    if (c.date.startsWith(todayStr)) return true;
-    const compDate = new Date(c.date);
-    return (
-      compDate.getUTCFullYear() === now.getFullYear() &&
-      compDate.getUTCMonth() === now.getMonth() &&
-      compDate.getUTCDate() === now.getDate()
-    );
-  });
+  const todayCompletion = habit.completions?.find((c) =>
+    c.date ? isSameDay(new Date(c.date), now) : false
+  );
   const isCompletedToday = !!todayCompletion;
 
   useEffect(() => {
