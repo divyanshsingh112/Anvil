@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { isSameDay } from "date-fns";
+import { toZonedTime } from "date-fns-tz";
 import { Habit, ToggleResponse } from "@/types";
 import { Sword, Sparkles, Zap, Edit2, Trash2, Clock, MessageSquare, Check, Loader2 } from "lucide-react";
 import { useHabitStore } from "@/store/useHabitStore";
@@ -52,10 +53,11 @@ export default function HabitCard({
     return cls;
   };
 
-  // Check if completed today using date-fns isSameDay
-  const now = new Date();
+  // Check if completed today using IST-aware date comparison
+  const IST = "Asia/Kolkata";
+  const todayIST = toZonedTime(new Date(), IST);
   const todayCompletion = habit.completions?.find((c) =>
-    c.date ? isSameDay(new Date(c.date), now) : false
+    c.date ? isSameDay(toZonedTime(new Date(c.date), IST), todayIST) : false
   );
   const isCompletedToday = !!todayCompletion;
 
@@ -100,7 +102,7 @@ export default function HabitCard({
     return days.includes(index);
   };
 
-  const todayDow = now.getDay();
+  const todayDow = todayIST.getDay();
   const isScheduledToday = isDayActive(todayDow);
 
   const handleCheckboxChange = async () => {

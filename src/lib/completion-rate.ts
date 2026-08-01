@@ -1,4 +1,7 @@
 import { Prisma, PrismaClient } from "@prisma/client";
+import { toZonedTime } from "date-fns-tz";
+
+const IST = "Asia/Kolkata";
 
 /**
  * Shared utility for calculating completion rate over a date range.
@@ -119,7 +122,8 @@ export async function calculateCompletionRate(
       if (habitArchivedMidnight < compMs) continue;
     }
 
-    const dayOfWeek = compDate.getDay();
+    const compIST = toZonedTime(compDate, IST);
+    const dayOfWeek = compIST.getDay();
     const scheduledList =
       habit.scheduledDays && habit.scheduledDays.length > 0
         ? habit.scheduledDays
@@ -166,7 +170,8 @@ export async function calculateCompletionRate(
       if (habitArchivedMidnight !== null && habitArchivedMidnight < currentDayMs) continue;
 
       // Check schedule
-      const dayOfWeek = currentDay.getDay();
+      const currentIST = toZonedTime(currentDay, IST);
+      const dayOfWeek = currentIST.getDay();
       const scheduledList = (habit.scheduledDays && habit.scheduledDays.length > 0) ? habit.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
       if (!scheduledList.includes(dayOfWeek)) {
         continue;
