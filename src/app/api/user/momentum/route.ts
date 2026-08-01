@@ -110,7 +110,8 @@ export async function GET() {
         const dayOfWeek = checkDay.getDay();
         for (const h of habits) {
           const hClass = h.class as keyof typeof scheduledCounts;
-          if (hClass in scheduledCounts && h.activeDays.includes(dayOfWeek)) {
+          const days = h.scheduledDays && h.scheduledDays.length > 0 ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
+          if (hClass in scheduledCounts && days.includes(dayOfWeek)) {
             scheduledCounts[hClass]++;
           }
         }

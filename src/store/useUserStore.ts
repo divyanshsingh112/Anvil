@@ -9,6 +9,7 @@ interface UserState extends UserGamification {
   rogueCompletions: number;
   trainingDataConsent: boolean;
   trainingConsentUpdatedAt: string | null;
+  consistencyScore?: number;
 
   fetchUserStats: () => Promise<void>;
   applyToggleResult: (data: UserGamification) => void;
@@ -30,6 +31,7 @@ export const useUserStore = create<UserState>((set) => ({
   rogueCompletions: 0,
   trainingDataConsent: false,
   trainingConsentUpdatedAt: null,
+  consistencyScore: undefined,
   isLoading: false,
   error: null,
 
@@ -57,6 +59,7 @@ export const useUserStore = create<UserState>((set) => ({
         rogueCompletions: data.rogueCompletions || 0,
         trainingDataConsent: !!data.trainingDataConsent,
         trainingConsentUpdatedAt: data.trainingConsentUpdatedAt || null,
+        consistencyScore: data.consistencyScore,
         isLoading: false,
       });
     } catch (err) {

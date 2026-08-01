@@ -50,7 +50,7 @@ export default function HabitForm({
       setName(initialHabit.name);
       setHabitClass(initialHabit.class);
       setDifficulty(initialHabit.difficulty);
-      setActiveDays(initialHabit.activeDays);
+      setActiveDays(initialHabit.scheduledDays ?? null);
     }
   }, [mode, initialHabit]);
 
@@ -91,6 +91,8 @@ export default function HabitForm({
       return;
     }
 
+    const daysToSave = activeDays === null ? [0, 1, 2, 3, 4, 5, 6] : activeDays;
+
     setIsSubmitting(true);
     try {
       if (mode === "create") {
@@ -100,14 +102,14 @@ export default function HabitForm({
           difficulty,
           year,
           month,
-          activeDays,
+          scheduledDays: daysToSave,
         });
       } else if (mode === "edit" && initialHabit) {
         await updateHabit(initialHabit.id, {
           name: name.trim(),
           class: habitClass,
           difficulty,
-          activeDays,
+          scheduledDays: daysToSave,
         });
       }
       onSuccess();

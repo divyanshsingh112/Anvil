@@ -32,13 +32,13 @@ export async function PUT(
     }
 
     const body = await request.json();
-    const { name, class: habitClass, difficulty, activeDays } = body;
+    const { name, class: habitClass, difficulty, scheduledDays } = body;
 
     const updateData: {
       name?: string;
       class?: HabitClass;
       difficulty?: HabitDifficulty;
-      activeDays?: number[];
+      scheduledDays?: number[];
     } = {};
 
     // Validate and build update payload
@@ -72,26 +72,26 @@ export async function PUT(
       updateData.difficulty = difficulty;
     }
 
-    if (activeDays !== undefined) {
-      if (activeDays === null) {
-        updateData.activeDays = [];
+    if (scheduledDays !== undefined) {
+      if (scheduledDays === null) {
+        updateData.scheduledDays = [0, 1, 2, 3, 4, 5, 6];
       } else {
-        if (!Array.isArray(activeDays)) {
+        if (!Array.isArray(scheduledDays)) {
           return NextResponse.json(
-            { error: "activeDays must be an array of integers" },
+            { error: "scheduledDays must be an array of integers" },
             { status: 400 }
           );
         }
-        for (const day of activeDays) {
+        for (const day of scheduledDays) {
           const parsedDay = parseInt(day, 10);
           if (isNaN(parsedDay) || parsedDay < 0 || parsedDay > 6) {
             return NextResponse.json(
-              { error: "activeDays values must be between 0 (Sunday) and 6 (Saturday)" },
+              { error: "scheduledDays values must be between 0 (Sunday) and 6 (Saturday)" },
               { status: 400 }
             );
           }
         }
-        updateData.activeDays = activeDays.map(d => parseInt(d, 10));
+        updateData.scheduledDays = scheduledDays.map(d => parseInt(d, 10));
       }
     }
 

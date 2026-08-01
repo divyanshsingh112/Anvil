@@ -4,6 +4,7 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { Prisma } from "@prisma/client";
 import { calculateProcrastinationFingerprint } from "@/lib/procrastination-calculator";
+import { classifyArchetype } from "@/lib/archetype-classifier";
 
 export async function GET() {
   try {
@@ -14,14 +15,22 @@ export async function GET() {
 
     const userId = session.user.id;
 
+    // Fetch Archetype & Volatility signals for composite calculation
+    const archetypeResult = await classifyArchetype(userId);
+    const archetype = archetypeResult.archetype === "insufficient_data" ? "steady_strategist" : archetypeResult.archetype;
+    const streakVolatility = archetypeResult.features?.streakVolatility ?? 0;
+
     // Run calculator
-    const results = await calculateProcrastinationFingerprint(userId);
-    const { dangerZoneHours, lastMinuteRate, avoidancePattern, confidence } = results;
+    const results = await calculateProcrastinationFingerprint(userId, undefined, {
+      streakVolatility,
+      archetype,
+    });
+    const { dangerZoneHours, lastMinuteRate, procrastinationScore, avoidancePattern, confidence } = results;
 
     // Save to MlUserProfile (upsert)
     const dbDangerZone = dangerZoneHours === "insufficient_data" ? [] : dangerZoneHours;
     const dbLastMinute = lastMinuteRate === "insufficient_data" ? null : new Prisma.Decimal(lastMinuteRate);
-    const dbProcrastination = lastMinuteRate === "insufficient_data" ? null : new Prisma.Decimal(lastMinuteRate);
+    const dbProcrastination = procrastinationScore === "insufficient_data" ? null : new Prisma.Decimal(procrastinationScore);
     const dbAvoidance = avoidancePattern as any;
 
     await prisma.mlUserProfile.upsert({
@@ -46,6 +55,7 @@ export async function GET() {
     return NextResponse.json({
       dangerZoneHours,
       lastMinuteRate,
+      procrastinationScore,
       avoidancePattern,
       confidence,
     });

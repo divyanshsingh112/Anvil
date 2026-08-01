@@ -1,19 +1,92 @@
 import { Prisma } from "@prisma/client";
 
-interface AvoidancePattern {
+export interface AvoidancePattern {
   avoidedClass: string;
   substituteClass: string;
   rate: number;
 }
 
-interface FingerprintResult {
+export interface FingerprintResult {
   dangerZoneHours: number[] | "insufficient_data";
   lastMinuteRate: number | "insufficient_data";
+  procrastinationScore: number | "insufficient_data";
   avoidancePattern: AvoidancePattern | null;
   confidence: {
     completionsCount: number;
     partialDaysCount: number;
   };
+}
+
+export const PROCRASTINATION_WEIGHTS = {
+  LAST_MINUTE_RATE: 0.40,
+  AVOIDANCE_PATTERN: 0.35,
+  STREAK_VOLATILITY: 0.25,
+  NIGHT_OWL_DAMPENING: 0.50,
+} as const;
+
+/**
+ * Calculates the multi-factor Composite Procrastination Score (0 - 100).
+ * Combines lastMinuteRate, avoidancePattern strength, streakVolatility, and Night Owl archetype dampening.
+ */
+export function calculateCompositeProcrastinationScore(
+  lastMinuteRate: number | "insufficient_data",
+  avoidancePattern: AvoidancePattern | null,
+  streakVolatility: number,
+  archetype: string,
+  partialDaysCount: number = 0
+): number | "insufficient_data" {
+  if (lastMinuteRate === "insufficient_data") {
+    return "insufficient_data";
+  }
+
+  // 1. Raw Signals (0 - 100 scale)
+  const lastMinuteSignal = Number(lastMinuteRate) || 0;
+  const volatilitySignal = Math.min(100, Math.max(0, streakVolatility * 100));
+
+  // 2. Split Avoidance Pattern Null-Handling Logic:
+  // - Case C (Pattern detected): rate >= 70%, partialDays >= 5. Signal = rate * 100, include 0.35 in denominator.
+  // - Case B (Assessed, low-avoidance): partialDays >= 5, rate < 70%. Signal = 0, include 0.35 in denominator (rewards proven non-avoidance).
+  // - Case A (Insufficient partial days): partialDays < 5. Avoidance is unmeasured -> Exclude 0.35 weight from denominator.
+  let avoidanceSignal = 0;
+  let includeAvoidanceWeight = false;
+
+  if (avoidancePattern !== null) {
+    avoidanceSignal = Math.min(100, Math.max(0, avoidancePattern.rate * 100));
+    includeAvoidanceWeight = true;
+  } else if (partialDaysCount >= 5) {
+    avoidanceSignal = 0;
+    includeAvoidanceWeight = true;
+  } else {
+    avoidanceSignal = 0;
+    includeAvoidanceWeight = false;
+  }
+
+  // 3. Archetype Adjustment (Dampen last-minute contribution for Night Owls)
+  const isNightOwl = (archetype || "").toLowerCase() === "night_owl";
+  const adjustedLastMinuteSignal = isNightOwl
+    ? lastMinuteSignal * PROCRASTINATION_WEIGHTS.NIGHT_OWL_DAMPENING
+    : lastMinuteSignal;
+
+  const lastMinuteWeight = isNightOwl
+    ? PROCRASTINATION_WEIGHTS.LAST_MINUTE_RATE * PROCRASTINATION_WEIGHTS.NIGHT_OWL_DAMPENING
+    : PROCRASTINATION_WEIGHTS.LAST_MINUTE_RATE;
+
+  const avoidanceWeight = includeAvoidanceWeight ? PROCRASTINATION_WEIGHTS.AVOIDANCE_PATTERN : 0;
+  const volatilityWeight = PROCRASTINATION_WEIGHTS.STREAK_VOLATILITY;
+
+  // 4. Weighted Sum & Effective Weight Normalization
+  const weightedSum =
+    adjustedLastMinuteSignal * PROCRASTINATION_WEIGHTS.LAST_MINUTE_RATE +
+    avoidanceSignal * PROCRASTINATION_WEIGHTS.AVOIDANCE_PATTERN +
+    volatilitySignal * PROCRASTINATION_WEIGHTS.STREAK_VOLATILITY;
+
+  const effectiveWeight = lastMinuteWeight + avoidanceWeight + volatilityWeight;
+
+  if (effectiveWeight <= 0) return 0;
+
+  const score = Math.round(weightedSum / effectiveWeight);
+
+  return Math.min(100, Math.max(0, score));
 }
 
 /**
@@ -22,7 +95,11 @@ interface FingerprintResult {
  */
 export async function calculateProcrastinationFingerprint(
   userId: string,
-  targetDateInput?: Date
+  targetDateInput?: Date,
+  options?: {
+    streakVolatility?: number;
+    archetype?: string;
+  }
 ): Promise<FingerprintResult> {
   const { prisma } = await import("./prisma");
 
@@ -32,7 +109,7 @@ export async function calculateProcrastinationFingerprint(
   const start30DaysAgo = new Date(today.getTime() - 30 * 24 * 60 * 60 * 1000);
   start30DaysAgo.setUTCHours(0, 0, 0, 0);
 
-  // 1. Query all completions for this user in the last 30 days
+  // 1. Query all completions for this user in the last 30 completed days
   const completions = await prisma.completion.findMany({
     where: {
       userId,
@@ -62,7 +139,7 @@ export async function calculateProcrastinationFingerprint(
     },
   });
 
-  // Calculate total scheduled habit slots in the last 30 days
+  // Calculate total scheduled habit slots in the last 30 completed days
   let totalScheduledSlots = 0;
   for (let i = 0; i < 30; i++) {
     const checkDay = new Date(start30DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
@@ -74,7 +151,8 @@ export async function calculateProcrastinationFingerprint(
 
       // EXPLICIT CREATE DATE CHECK: Protect against Phase 19 new habit creation bug
       if (created <= checkDay && (!archived || archived > checkDay)) {
-        if (h.activeDays.includes(dayOfWeek)) {
+        const days = (h.scheduledDays && h.scheduledDays.length > 0) ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
+        if (days.includes(dayOfWeek)) {
           totalScheduledSlots++;
         }
       }
@@ -138,7 +216,8 @@ export async function calculateProcrastinationFingerprint(
       const created = new Date(h.createdAt);
       const archived = h.archivedAt ? new Date(h.archivedAt) : null;
       if (created <= checkDay && (!archived || archived > checkDay)) {
-        if (h.activeDays.includes(dayOfWeek)) {
+        const days = (h.scheduledDays && h.scheduledDays.length > 0) ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
+        if (days.includes(dayOfWeek)) {
           dailyScheduled[dateStr].push(h.id);
         }
       }
@@ -183,8 +262,8 @@ export async function calculateProcrastinationFingerprint(
       }
 
       // Find substitution patterns
-      for (const skipped of skippedClasses) {
-        for (const completed of completedClasses) {
+      for (const skipped of Array.from(skippedClasses)) {
+        for (const completed of Array.from(completedClasses)) {
           if (skipped !== completed) {
             const key = `${skipped}->${completed}`;
             pairCounts[key] = (pairCounts[key] || 0) + 1;
@@ -223,9 +302,20 @@ export async function calculateProcrastinationFingerprint(
     }
   }
 
+  const streakVolatility = options?.streakVolatility ?? 0;
+  const archetype = options?.archetype ?? "steady_strategist";
+  const procrastinationScore = calculateCompositeProcrastinationScore(
+    lastMinuteRate,
+    avoidancePattern,
+    streakVolatility,
+    archetype,
+    partialDaysCount
+  );
+
   return {
     dangerZoneHours,
     lastMinuteRate,
+    procrastinationScore,
     avoidancePattern,
     confidence: {
       completionsCount,

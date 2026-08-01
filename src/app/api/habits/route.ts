@@ -64,7 +64,7 @@ export async function POST(request: Request) {
     }
 
     const body = await request.json();
-    const { name, class: habitClass, difficulty, year, month, activeDays } = body;
+    const { name, class: habitClass, difficulty, year, month, scheduledDays } = body;
 
     // Validate name
     if (!name || typeof name !== "string" || name.trim().length === 0 || name.length > 50) {
@@ -106,25 +106,26 @@ export async function POST(request: Request) {
       );
     }
 
-    // Validate activeDays if provided
-    let parsedActiveDays: number[] | null = null;
-    if (activeDays !== undefined && activeDays !== null) {
-      if (!Array.isArray(activeDays)) {
+    // Validate scheduledDays if provided
+    let parsedDays: number[] = [0, 1, 2, 3, 4, 5, 6];
+
+    if (scheduledDays !== undefined && scheduledDays !== null) {
+      if (!Array.isArray(scheduledDays)) {
         return NextResponse.json(
-          { error: "activeDays must be an array of integers" },
+          { error: "scheduledDays must be an array of integers" },
           { status: 400 }
         );
       }
-      for (const day of activeDays) {
+      for (const day of scheduledDays) {
         const parsedDay = parseInt(day, 10);
         if (isNaN(parsedDay) || parsedDay < 0 || parsedDay > 6) {
           return NextResponse.json(
-            { error: "activeDays values must be between 0 (Sunday) and 6 (Saturday)" },
+            { error: "scheduledDays values must be between 0 (Sunday) and 6 (Saturday)" },
             { status: 400 }
           );
         }
       }
-      parsedActiveDays = activeDays.map(d => parseInt(d, 10));
+      parsedDays = scheduledDays.map(d => parseInt(d, 10));
     }
 
     const habit = await prisma.habit.create({
@@ -135,7 +136,7 @@ export async function POST(request: Request) {
         difficulty,
         year: parsedYear,
         month: parsedMonth,
-        activeDays: parsedActiveDays === null ? undefined : parsedActiveDays,
+        scheduledDays: parsedDays,
       },
     });
 

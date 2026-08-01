@@ -63,6 +63,28 @@ export async function checkAndApplyStreakDecayAndRecharge(
   }
 
   // 3. Day-over-day Streak Decay Check
+  // Check if yesterday was a scheduled day for any active habit for this user
+  const yesterdayDow = yesterday.getUTCDay();
+
+  const activeHabitsYesterday = await tx.habit.findMany({
+    where: {
+      userId,
+      archivedAt: null,
+      createdAt: { lte: yesterday },
+    },
+    select: { scheduledDays: true },
+  });
+
+  const scheduledCountYesterday = activeHabitsYesterday.filter((h) => {
+    const days = h.scheduledDays && h.scheduledDays.length > 0 ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
+    return days.includes(yesterdayDow);
+  }).length;
+
+  // If user has active habits but ZERO habits were scheduled for yesterday, yesterday was an off-day.
+  if (scheduledCountYesterday === 0 && activeHabitsYesterday.length > 0) {
+    return user;
+  }
+
   // Check if they completed any habits yesterday
   const yesterdayCompletionsCount = await tx.completion.count({
     where: { userId, date: yesterday },

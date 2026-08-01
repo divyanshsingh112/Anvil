@@ -96,7 +96,8 @@ export async function exportAnonymizedSnapshot(userId: string): Promise<any> {
     const checkDay = new Date(start14DaysAgo.getTime() + i * 24 * 60 * 60 * 1000);
     const dayOfWeek = checkDay.getDay(); // 0 = Sunday, 1 = Monday...
     for (const h of habits) {
-      if (h.activeDays.includes(dayOfWeek)) {
+      const days = (h.scheduledDays && h.scheduledDays.length > 0) ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
+      if (days.includes(dayOfWeek)) {
         activeHabitSlots++;
       }
     }

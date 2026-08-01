@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 
 import { checkAndApplyStreakDecayAndRecharge } from "@/lib/streak-decay";
+import { FEATURE_CONSISTENCY_SCORE } from "@/config/features";
+import { calculateConsistencyScore } from "@/lib/consistency-calculator";
 
 export const dynamic = "force-dynamic";
 
@@ -49,6 +51,16 @@ export async function GET() {
       });
     }
 
+    // Asynchronously trigger lazy archetype classification (Phase 21)
+    import("@/lib/services/archetype-service").then(({ triggerLazyArchetypeClassification }) => {
+      triggerLazyArchetypeClassification(session.user.id).catch(console.error);
+    });
+
+    let consistencyScore: number | undefined = undefined;
+    if (FEATURE_CONSISTENCY_SCORE) {
+      consistencyScore = await calculateConsistencyScore(prisma, session.user.id);
+    }
+
     return NextResponse.json({
       xp: Number(user.xp),
       level: user.level,
@@ -64,6 +76,8 @@ export async function GET() {
       rogueCompletions: stats?.rogueCompletions || 0,
       trainingDataConsent: user.trainingDataConsent,
       trainingConsentUpdatedAt: user.trainingConsentUpdatedAt,
+      allowChallenges: user.allowChallenges ?? true,
+      consistencyScore,
     });
   } catch (error) {
     console.error("GET user stats error:", error);

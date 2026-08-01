@@ -94,9 +94,13 @@ export default function HabitCard({
   };
 
   const isDayActive = (index: number) => {
-    if (!habit.activeDays || habit.activeDays.length === 0) return true; // all days active
-    return habit.activeDays.includes(index);
+    const days = habit.scheduledDays;
+    if (!days || days.length === 0) return true; // all days active
+    return days.includes(index);
   };
+
+  const todayDow = now.getDay();
+  const isScheduledToday = isDayActive(todayDow);
 
   const handleCheckboxChange = async () => {
     if (!isTodayPeriod || isToggling) return;
@@ -239,6 +243,11 @@ export default function HabitCard({
               >
                 {getThemedClass(habit.class)}
               </span>
+              {!isScheduledToday && (
+                <span className="rounded-full border px-2 py-0.5 text-[10px] font-bold uppercase tracking-wider text-slate-400 bg-slate-800/40 border-slate-700">
+                  Not Due Today
+                </span>
+              )}
             </div>
           </div>
         </div>

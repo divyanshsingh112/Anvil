@@ -52,7 +52,7 @@ export async function GET(request: Request) {
       select: {
         id: true,
         month: true,
-        activeDays: true,
+        scheduledDays: true,
         createdAt: true,
       },
     });
@@ -109,12 +109,9 @@ export async function GET(request: Request) {
             const date = new Date(year, month - 1, day);
             const dow = date.getDay(); // 0=Sun, 6=Sat
 
-            // If habit has activeDays set, only count matching days
-            if (
-              habit.activeDays &&
-              habit.activeDays.length > 0 &&
-              !habit.activeDays.includes(dow)
-            ) {
+            // Check scheduledDays schedule
+            const days = habit.scheduledDays && habit.scheduledDays.length > 0 ? habit.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
+            if (!days.includes(dow)) {
               continue;
             }
 

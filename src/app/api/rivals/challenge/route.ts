@@ -40,6 +40,13 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: errObj.message }, { status: 400 });
     }
 
+    if (errObj.message === "USER_NOT_ACCEPTING_CHALLENGES") {
+      return NextResponse.json(
+        { error: "This user isn't accepting challenges right now" },
+        { status: 400 }
+      );
+    }
+
     console.error("POST /api/rivals/challenge error:", error);
     return NextResponse.json(
       { error: "Internal server error" },

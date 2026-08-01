@@ -74,6 +74,11 @@ export async function createChallenge(
     throw new Error("RIVAL_NOT_FOUND");
   }
 
+  // 2b. Check if target user accepts challenges
+  if (rival.allowChallenges === false) {
+    throw new Error("USER_NOT_ACCEPTING_CHALLENGES");
+  }
+
   // 3. Prevent self-challenges
   if (rival.id === challengerId) {
     throw new Error("CANNOT_CHALLENGE_SELF");

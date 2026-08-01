@@ -89,12 +89,14 @@ export async function calculateMomentumScore(userId: string, targetDateInput?: D
       const created = new Date(h.createdAt);
       const archived = h.archivedAt ? new Date(h.archivedAt) : null;
 
+      const days = (h.scheduledDays && h.scheduledDays.length > 0) ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
+
       if (created <= checkDayR1 && (!archived || archived > checkDayR1)) {
-        if (h.activeDays.includes(dayOfWeekR1)) scheduledLast14++;
+        if (days.includes(dayOfWeekR1)) scheduledLast14++;
       }
 
       if (created <= checkDayR2 && (!archived || archived > checkDayR2)) {
-        if (h.activeDays.includes(dayOfWeekR2)) scheduledPrev14++;
+        if (days.includes(dayOfWeekR2)) scheduledPrev14++;
       }
     }
   }
@@ -133,8 +135,9 @@ export async function calculateMomentumScore(userId: string, targetDateInput?: D
         for (const h of habits) {
           const created = new Date(h.createdAt);
           const archived = h.archivedAt ? new Date(h.archivedAt) : null;
+          const days = (h.scheduledDays && h.scheduledDays.length > 0) ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
           if (created <= checkDay && (!archived || archived > checkDay)) {
-            if (h.activeDays.includes(d)) {
+            if (days.includes(d)) {
               dayScheduled++;
             }
           }

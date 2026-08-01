@@ -1,0 +1,19 @@
+name: Daily Maintenance Cron Tick
+
+on:
+  schedule:
+    # Trigger once daily at 18:30 UTC (00:00 IST midnight)
+    - cron: '30 18 * * *'
+  workflow_dispatch:
+
+jobs:
+  cron-tick:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger Daily Tick API Route
+        run: |
+          curl -X POST "${{ secrets.APP_URL }}/api/cron/daily-tick" \
+            -H "Content-Type: application/json" \
+            -H "x-cron-secret: ${{ secrets.CRON_SECRET }}" \
+            --fail \
+            --show-error

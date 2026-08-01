@@ -3,6 +3,7 @@
 import { useUserStore } from "@/store/useUserStore";
 import { Flame, Shield, Snowflake } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
+import { FEATURE_CONSISTENCY_SCORE } from "@/config/features";
 
 export default function StreakBadge() {
   const labels = useLabels();
@@ -22,6 +23,8 @@ export default function StreakBadge() {
     );
   })();
 
+  const consistencyScore = useUserStore((state) => state.consistencyScore);
+
   return (
     <div className="flex flex-col gap-1.5">
       <div className="flex items-center gap-3">
@@ -35,9 +38,15 @@ export default function StreakBadge() {
           <div className="text-xl font-black text-white flex items-center gap-1.5">
             {streak} {streak === 1 ? "day" : "days"}
           </div>
-          <div className="text-[10px] text-orange-300 font-semibold">
-            Active Run
-          </div>
+          {FEATURE_CONSISTENCY_SCORE && consistencyScore !== undefined ? (
+            <div className="text-[11px] text-slate-400 font-medium mt-0.5">
+              Consistency: <span className="font-semibold text-slate-200">{consistencyScore}%</span>
+            </div>
+          ) : (
+            <div className="text-[10px] text-orange-300 font-semibold">
+              Active Run
+            </div>
+          )}
         </div>
       </div>
 

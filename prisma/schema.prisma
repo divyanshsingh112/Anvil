@@ -34,6 +34,7 @@ model User {
   // Privacy & Consent Settings (Phase 18.5)
   trainingDataConsent      Boolean   @default(false)
   trainingConsentUpdatedAt DateTime?
+  allowChallenges          Boolean   @default(true)
 
   habits            Habit[]
   completions       Completion[]
@@ -43,7 +44,8 @@ model User {
   questChains       QuestChain[]
   rivalsAsChallenger Rival[] @relation("RivalsAsChallenger")
   rivalsAsRival      Rival[] @relation("RivalsAsRival")
-  mlUserProfile     MlUserProfile?
+  mlUserProfile      MlUserProfile?
+  energyCheckins     EnergyCheckin[]
   stats             UserStats?
 }
 
@@ -57,9 +59,14 @@ model Habit {
   difficulty String    // novice | adept | master
   year       Int
   month      Int
-  activeDays Int[]
-  createdAt  DateTime  @default(now())
+  activeDays    Int[]    @default([0, 1, 2, 3, 4, 5, 6])
+  scheduledDays Int[]    @default([0, 1, 2, 3, 4, 5, 6])
+  createdAt     DateTime @default(now())
   archivedAt DateTime?
+
+  // Cooldown tracking for Adaptive Difficulty Engine (Phase 22)
+  lastDifficultySuggestionAt     DateTime?
+  lastDifficultySuggestionAction String? // accepted | dismissed
 
   user        User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   completions Completion[]
@@ -241,6 +248,8 @@ model MlUserProfile {
   momentumHistory         Json?
   predictedCompletionRate Decimal?
   lastComputedAt          DateTime?
+  archetypeVersion        Int?       @default(1)
+  archetypeComputedAt     DateTime?
 
   user User @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
@@ -277,3 +286,35 @@ model TrainingDataSnapshot {
   @@index([snapshotDate])
   @@index([anonId])
 }
+
+// ─── HABIT AUTOPSY (Phase 23) ───────────────────────────────────────
+
+model HabitAutopsy {
+  id              String   @id @default(uuid()) @db.Uuid
+  userId          String   @db.Uuid
+  habitId         String   @db.Uuid
+  autopsyDate     DateTime @db.Date
+  structuredInput Json
+  summaryText     String
+  actionableTip   String
+  createdAt       DateTime @default(now())
+
+  @@unique([habitId, autopsyDate])
+  @@index([userId, autopsyDate])
+}
+
+// ─── ENERGY CHECKIN (1-Month Trial) ────────────────────────────────
+
+model EnergyCheckin {
+  id        String   @id @default(uuid()) @db.Uuid
+  userId    String   @db.Uuid
+  date      DateTime @db.Date
+  level     String   // low | medium | high
+  createdAt DateTime @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, date])
+  @@index([userId, date])
+}
+

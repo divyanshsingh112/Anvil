@@ -21,7 +21,8 @@ export interface Habit {
   difficulty: HabitDifficulty;
   year: number;
   month: number;
-  activeDays: number[] | null;
+  activeDays?: number[] | null;
+  scheduledDays?: number[] | null;
   createdAt: Date | string;
   archivedAt: Date | string | null;
   completions?: Completion[];

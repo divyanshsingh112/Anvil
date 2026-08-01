@@ -1,33 +1,17 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, Info, Loader2, Save, HelpCircle } from "lucide-react";
+import { ShieldCheck, Swords, Info, Loader2, Save, HelpCircle } from "lucide-react";
 
 export default function SettingsPage() {
   const [consent, setConsent] = useState(false);
+  const [allowChallenges, setAllowChallenges] = useState(true);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [showDetailedInfo, setShowDetailedInfo] = useState(false);
-
-  // Fetch current consent status from stats API (we extended it to include completions,
-  // let's fetch settings directly or extend stats API or fetch setting from stats)
-  const fetchSettings = async () => {
-    setIsLoading(true);
-    try {
-      const res = await fetch("/api/user/stats");
-      if (!res.ok) throw new Error("Failed to load settings");
-      const data = await res.json();
-      // Wait, does stats route return trainingDataConsent?
-      // Ah! In stats route we didn't return trainingDataConsent in the JSON, let's verify.
-      // Yes, GET /api/user/stats returned user.trainingDataConsent in DB check, but let's see what was returned in the final JSON.
-      // Let's modify stats route to return trainingDataConsent too! That is super clean and easy.
-    } catch (e) {
-      console.error(e);
-    }
-  };
 
   useEffect(() => {
     const loadSettings = async () => {
@@ -36,8 +20,8 @@ export default function SettingsPage() {
         const res = await fetch("/api/user/stats");
         if (res.ok) {
           const data = await res.json();
-          // We'll read from data.trainingDataConsent (which we will verify/add in user stats route)
           setConsent(!!data.trainingDataConsent);
+          setAllowChallenges(data.allowChallenges ?? true);
           if (data.trainingConsentUpdatedAt) {
             setUpdatedAt(new Date(data.trainingConsentUpdatedAt).toLocaleString());
           }
@@ -78,6 +62,32 @@ export default function SettingsPage() {
     }
   };
 
+  const handleToggleAllowChallenges = async () => {
+    setIsSaving(true);
+    setMessage("");
+    setError("");
+    try {
+      const res = await fetch("/api/user/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ allowChallenges: !allowChallenges }),
+      });
+
+      if (!res.ok) {
+        const err = await res.json();
+        throw new Error(err.error || "Failed to update challenge settings");
+      }
+
+      const data = await res.json();
+      setAllowChallenges(data.allowChallenges);
+      setMessage("Settings updated successfully!");
+    } catch (e: any) {
+      setError(e.message);
+    } finally {
+      setIsSaving(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-2">
@@ -101,6 +111,59 @@ export default function SettingsPage() {
       {/* Message banners */}
       {message && <div className="text-xs text-emerald-400 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20">{message}</div>}
       {error && <div className="text-xs text-rose-400 bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">{error}</div>}
+
+      {/* Rival Challengeability Toggle Card */}
+      <div
+        className="rounded-xl border p-6 transition-all duration-300 flex flex-col gap-4 relative overflow-hidden"
+        style={{
+          backgroundColor: "var(--bg-secondary)",
+          borderColor: "var(--border)",
+        }}
+      >
+        <div className="flex items-start gap-4">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border"
+            style={{
+              backgroundColor: "var(--bg-tertiary)",
+              borderColor: "var(--border)",
+            }}
+          >
+            <Swords className="h-5 w-5 text-purple-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-extrabold text-white tracking-tight">
+              Rival Challenges
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Control whether other users can find and challenge you to habit duels.
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-800/80 pt-4 flex flex-col gap-4">
+          <div className="flex items-center justify-between gap-4 bg-slate-950/20 border border-slate-800/40 p-4 rounded-lg">
+            <div className="flex-1">
+              <p className="text-xs text-slate-300 leading-relaxed font-medium">
+                Allow other users to search for your username or email and challenge you to 7-day habit duels. When turned off, any new challenge requests targeting your account will be automatically declined.
+              </p>
+            </div>
+            
+            <button
+              onClick={handleToggleAllowChallenges}
+              disabled={isSaving}
+              className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
+                allowChallenges ? "bg-purple-600" : "bg-slate-700"
+              }`}
+            >
+              <span
+                className={`pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow ring-0 transition duration-200 ease-in-out ${
+                  allowChallenges ? "translate-x-5" : "translate-x-0"
+                }`}
+              />
+            </button>
+          </div>
+        </div>
+      </div>
 
       {/* Privacy Consent Card */}
       <div
@@ -214,3 +277,4 @@ export default function SettingsPage() {
     </div>
   );
 }
+

@@ -155,9 +155,9 @@ async function checkPerfectWeek(tx: Prisma.TransactionClient, userId: string): P
       }
     });
 
-    const activeHabits = habits.filter((h) => {
-      if (!h.activeDays || h.activeDays.length === 0) return true;
-      return h.activeDays.includes(dayOfWeek);
+    const activeHabits = habits.filter((h: any) => {
+      const days = (h.scheduledDays && h.scheduledDays.length > 0) ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
+      return days.includes(dayOfWeek);
     });
 
     if (activeHabits.length === 0) {

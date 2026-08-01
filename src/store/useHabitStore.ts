@@ -19,7 +19,8 @@ interface HabitStore {
     difficulty: HabitDifficulty;
     year: number;
     month: number;
-    activeDays: number[] | null;
+    activeDays?: number[] | null;
+    scheduledDays?: number[] | null;
   }) => Promise<void>;
   updateHabit: (
     id: string,
@@ -28,6 +29,7 @@ interface HabitStore {
       class?: HabitClass;
       difficulty?: HabitDifficulty;
       activeDays?: number[] | null;
+      scheduledDays?: number[] | null;
     }
   ) => Promise<void>;
   archiveHabit: (id: string) => Promise<void>;
@@ -88,7 +90,7 @@ export const useHabitStore = create<HabitStore>((set, get) => ({
       difficulty: data.difficulty,
       year: data.year,
       month: data.month,
-      activeDays: data.activeDays,
+      scheduledDays: data.scheduledDays || [0, 1, 2, 3, 4, 5, 6],
       createdAt: new Date().toISOString(),
       archivedAt: null,
       completions: [],

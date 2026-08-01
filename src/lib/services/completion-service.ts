@@ -347,8 +347,9 @@ async function checkPerfectDayCondition(
   });
 
   // Filter to only those scheduled for today
-  const todayScheduledHabits = monthHabits.filter((h) => {
-    return !h.activeDays || h.activeDays.length === 0 || h.activeDays.includes(currentDayOfWeek);
+  const todayScheduledHabits = monthHabits.filter((h: any) => {
+    const days = (h.scheduledDays && h.scheduledDays.length > 0) ? h.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
+    return days.includes(currentDayOfWeek);
   });
 
   return (

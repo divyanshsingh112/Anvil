@@ -1,13 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { signOut } from "next-auth/react";
 import { useUserStore } from "@/store/useUserStore";
 import { useLabels } from "@/hooks/useLabels";
 import * as Icons from "lucide-react";
-import { Coins, Flame, Award, Loader2 } from "lucide-react";
+import { Coins, Flame, Award, Loader2, LogOut } from "lucide-react";
 import React, { ComponentType } from "react";
 import AvatarBuilder from "@/components/gamification/AvatarBuilder";
 import ProcrastinationFingerprint from "@/components/dashboard/ProcrastinationFingerprint";
+import ArchetypeCard from "@/components/dashboard/ArchetypeCard";
+import MonthForecastWidget from "@/components/dashboard/MonthForecastWidget";
 
 interface AchievementUI {
   id: string;
@@ -89,12 +92,24 @@ export default function ProfilePage() {
           />
 
           <div className="flex-1 text-center md:text-left">
-            <h1 className="text-2xl font-black md:text-3xl text-white tracking-tight">
-              {labels.levelLabel} Profile
-            </h1>
-            <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
-              {labels.levelLabel} {level} {labels.habitSingular} Champion
-            </p>
+            <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
+              <div>
+                <h1 className="text-2xl font-black md:text-3xl text-white tracking-tight">
+                  {labels.levelLabel} Profile
+                </h1>
+                <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
+                  {labels.levelLabel} {level} {labels.habitSingular} Champion
+                </p>
+              </div>
+
+              <button
+                onClick={() => signOut({ callbackUrl: "/login" })}
+                className="self-center sm:self-auto flex items-center gap-2 px-4 py-2 rounded-xl text-xs font-bold text-red-400 border border-red-500/30 hover:bg-red-500/10 transition-all duration-200"
+              >
+                <LogOut className="h-4 w-4" />
+                Sign Out
+              </button>
+            </div>
 
             {/* Level XP Progress Bar */}
             <div className="mt-4 max-w-md mx-auto md:mx-0">
@@ -179,8 +194,10 @@ export default function ProfilePage() {
         </div>
       </section>
 
-      {/* Procrastination Fingerprint Insight Card */}
-      <div className="mt-8">
+      {/* ML Insights Section */}
+      <div className="mt-8 flex flex-col gap-6">
+        <MonthForecastWidget />
+        <ArchetypeCard />
         <ProcrastinationFingerprint />
       </div>
  

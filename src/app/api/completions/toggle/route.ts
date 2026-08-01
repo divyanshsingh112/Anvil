@@ -22,13 +22,26 @@ export async function POST(request: Request) {
       );
     }
 
-    // Run the toggle operation inside a single atomic database transaction
+    // Run the toggle operation inside a single atomic database transaction (Phase 11.5 logic)
     const result = await prisma.$transaction(async (tx) => {
       return await processCompletionToggle(tx, userId, habitId, completed, {
         timeBucket,
         timeAccuracy,
         customCompletedAt,
       });
+    });
+
+    // Post-toggle Non-Critical Async Side Effects (dispatched AFTER transaction commits)
+    // Non-blocking fire-and-forget: failures log only and never affect toggle status or rollback transaction
+    Promise.allSettled([
+      import("@/lib/services/momentum-service").then(({ triggerLazyMomentumRecalculation }) =>
+        triggerLazyMomentumRecalculation(userId, new Date(), true)
+      ),
+      import("@/lib/services/archetype-service").then(({ triggerLazyArchetypeClassification }) =>
+        triggerLazyArchetypeClassification(userId, new Date(), true)
+      ),
+    ]).catch((err) => {
+      console.error("[Post-Toggle Async Side Effect Error]:", err);
     });
 
     return NextResponse.json(result);

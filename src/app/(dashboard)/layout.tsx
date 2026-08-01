@@ -4,7 +4,8 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useEffect } from "react";
-import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen, LogOut } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
 
 export default function DashboardLayout({
@@ -27,6 +28,10 @@ export default function DashboardLayout({
     { label: labels.leaderboardLabel, href: "/leaderboard", icon: Trophy },
     { label: "Profile", href: "/profile", icon: User },
   ];
+
+  const handleLogout = () => {
+    signOut({ callbackUrl: "/login" });
+  };
 
   return (
     <div className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--bg-primary)" }}>
@@ -75,7 +80,7 @@ export default function DashboardLayout({
             })}
           </nav>
 
-          {/* User Status Stats Widget */}
+          {/* User Status Stats & Logout Widget */}
           <div className="flex items-center gap-3 shrink-0">
             {/* Coins */}
             <div
@@ -101,6 +106,16 @@ export default function DashboardLayout({
             >
               <span>{labels.levelLabel === "Level" ? "LVL" : labels.levelLabel.toUpperCase()} {level}</span>
             </div>
+
+            {/* Log Out Button */}
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all duration-200 hover:bg-red-500/20 hover:border-red-500/40 text-red-400 border-red-500/20"
+              title="Log out of session"
+            >
+              <LogOut className="h-4 w-4" />
+              <span className="hidden md:inline">Log Out</span>
+            </button>
           </div>
         </div>
 
@@ -127,6 +142,13 @@ export default function DashboardLayout({
               </Link>
             );
           })}
+          <button
+            onClick={handleLogout}
+            className="flex flex-col items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-red-400 transition-all duration-200"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>Logout</span>
+          </button>
         </div>
       </header>
 

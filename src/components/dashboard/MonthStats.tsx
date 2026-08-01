@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useUserStore } from "@/store/useUserStore";
 import { Target, Flame, Swords } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
+import { FEATURE_CONSISTENCY_SCORE } from "@/config/features";
 
 interface MonthStatsProps {
   year: number;
@@ -21,7 +22,7 @@ export default function MonthStats({ year, month }: MonthStatsProps) {
   const labels = useLabels();
   const [stats, setStats] = useState<StatsData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const { streak } = useUserStore();
+  const { streak, consistencyScore } = useUserStore();
 
   useEffect(() => {
     const fetchStats = async () => {
@@ -114,6 +115,11 @@ export default function MonthStats({ year, month }: MonthStatsProps) {
         <div className="text-3xl font-black" style={{ color: "var(--text-primary)" }}>
           {streak} <span className="text-base font-semibold" style={{ color: "var(--text-secondary)" }}>days</span>
         </div>
+        {FEATURE_CONSISTENCY_SCORE && consistencyScore !== undefined && (
+          <p className="text-[11px] mt-0.5 font-medium text-slate-400">
+            Consistency: <span className="font-semibold text-slate-200">{consistencyScore}%</span>
+          </p>
+        )}
         <p className="text-[11px] mt-1" style={{ color: "var(--text-muted)" }}>
           {streak > 0 ? "Keep the flame alive!" : `Complete all ${labels.habitPlural.toLowerCase()} today to start`}
         </p>

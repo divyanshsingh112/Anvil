@@ -69,7 +69,7 @@ export async function calculateCompletionRate(
     },
     select: {
       id: true,
-      activeDays: true,
+      scheduledDays: true,
       createdAt: true,
       archivedAt: true,
     },
@@ -121,13 +121,10 @@ export async function calculateCompletionRate(
       // Skip if habit was archived before this day
       if (habitArchivedMidnight !== null && habitArchivedMidnight < currentDayMs) continue;
 
-      // Check activeDays schedule
+      // Check schedule
       const dayOfWeek = currentDay.getUTCDay();
-      if (
-        habit.activeDays &&
-        habit.activeDays.length > 0 &&
-        !habit.activeDays.includes(dayOfWeek)
-      ) {
+      const scheduledList = (habit.scheduledDays && habit.scheduledDays.length > 0) ? habit.scheduledDays : [0, 1, 2, 3, 4, 5, 6];
+      if (!scheduledList.includes(dayOfWeek)) {
         continue;
       }
 

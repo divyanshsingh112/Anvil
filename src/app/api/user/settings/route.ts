@@ -12,21 +12,40 @@ export async function POST(request: Request) {
 
     const userId = session.user.id;
     const body = await request.json();
-    const { trainingDataConsent } = body;
+    const { trainingDataConsent, allowChallenges } = body;
 
-    if (typeof trainingDataConsent !== "boolean") {
-      return NextResponse.json({ error: "trainingDataConsent boolean parameter is required" }, { status: 400 });
+    if (
+      typeof trainingDataConsent !== "boolean" &&
+      typeof allowChallenges !== "boolean"
+    ) {
+      return NextResponse.json(
+        { error: "At least one valid boolean parameter (trainingDataConsent or allowChallenges) is required" },
+        { status: 400 }
+      );
+    }
+
+    const updateData: {
+      trainingDataConsent?: boolean;
+      trainingConsentUpdatedAt?: Date;
+      allowChallenges?: boolean;
+    } = {};
+
+    if (typeof trainingDataConsent === "boolean") {
+      updateData.trainingDataConsent = trainingDataConsent;
+      updateData.trainingConsentUpdatedAt = new Date();
+    }
+
+    if (typeof allowChallenges === "boolean") {
+      updateData.allowChallenges = allowChallenges;
     }
 
     const updatedUser = await prisma.user.update({
       where: { id: userId },
-      data: {
-        trainingDataConsent,
-        trainingConsentUpdatedAt: new Date(),
-      },
+      data: updateData,
       select: {
         trainingDataConsent: true,
         trainingConsentUpdatedAt: true,
+        allowChallenges: true,
       },
     });
 
