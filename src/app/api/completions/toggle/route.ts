@@ -24,13 +24,16 @@ export async function POST(request: Request) {
     }
 
     // Run the toggle operation inside a single atomic database transaction (Phase 11.5 logic)
-    const result = await prisma.$transaction(async (tx: Prisma.TransactionClient) => {
-      return await processCompletionToggle(tx, userId, habitId, completed, {
-        timeBucket,
-        timeAccuracy,
-        customCompletedAt,
-      });
-    });
+    const result = await prisma.$transaction(
+      async (tx: Prisma.TransactionClient) => {
+        return await processCompletionToggle(tx, userId, habitId, completed, {
+          timeBucket,
+          timeAccuracy,
+          customCompletedAt,
+        });
+      },
+      { timeout: 15000, maxWait: 5000 }
+    );
 
     // Post-toggle Non-Critical Async Side Effects (dispatched AFTER transaction commits)
     // Non-blocking fire-and-forget: failures log only and never affect toggle status or rollback transaction
