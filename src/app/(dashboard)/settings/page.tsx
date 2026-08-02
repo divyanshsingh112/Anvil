@@ -255,7 +255,7 @@ export default function SettingsPage() {
                   <ul className="list-disc pl-4 mt-1.5 flex flex-col gap-1 text-slate-400">
                     <li>Your real name, display name, or email address.</li>
                     <li>The text titles, descriptions, or names of your {labels.habitPlural.toLowerCase()}.</li>
-                    <li>Free-text comments, notes, or entries in your {labels.habitSingular === "Quest" ? "Quest Journal" : `${labels.habitSingular} Journal`}.</li>
+                    <li>Free-text comments, notes, or entries in your {labels.journalLabel}.</li>
                     <li>Opponent/{labels.rivalLabel.toLowerCase()} names, profiles, or relationships.</li>
                     <li>Exact timestamps of habit completions (only aggregated time buckets).</li>
                     <li>IP addresses, locations, or hardware fingerprinting details.</li>

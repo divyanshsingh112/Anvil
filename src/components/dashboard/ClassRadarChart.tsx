@@ -51,12 +51,9 @@ export default function ClassRadarChart() {
 
   if (isLoading) {
     return (
-      <div
-        className="stat-card flex flex-col items-center justify-center"
-        style={{ minHeight: "320px" }}
-      >
+      <div className="glass-card rounded-2xl p-6 border flex flex-col items-center justify-center min-h-[320px]">
         <Loader2 className="h-6 w-6 animate-spin text-purple-500" />
-        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-2">
+        <span className="font-geist text-xs text-slate-400 font-bold uppercase tracking-wider mt-3">
           Loading attributes...
         </span>
       </div>
@@ -65,12 +62,9 @@ export default function ClassRadarChart() {
 
   if (error || !attrs) {
     return (
-      <div
-        className="stat-card flex flex-col items-center justify-center"
-        style={{ minHeight: "320px" }}
-      >
-        <Shield className="h-6 w-6 text-red-500" />
-        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-2">
+      <div className="glass-card rounded-2xl p-6 border flex flex-col items-center justify-center min-h-[320px]">
+        <Shield className="h-6 w-6 text-rose-500" />
+        <span className="font-geist text-xs text-slate-400 font-bold uppercase tracking-wider mt-3">
           Failed to load attributes
         </span>
       </div>
@@ -85,53 +79,41 @@ export default function ClassRadarChart() {
   ];
 
   return (
-    <div className="stat-card" style={{ minHeight: "320px" }}>
+    <div className="glass-card rounded-2xl p-6 border border-slate-700/60 min-h-[320px] transition-all duration-300">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <div
-          className="flex h-9 w-9 items-center justify-center rounded-lg"
-          style={{
-            backgroundColor: "rgba(124, 58, 237, 0.15)",
-            border: "1px solid rgba(124, 58, 237, 0.3)",
-          }}
-        >
-          <Shield className="h-4 w-4" style={{ color: "var(--accent-purple)" }} />
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-purple-500/15 border border-purple-500/30 shadow-md">
+          <Shield className="h-4 w-4 text-purple-400" />
         </div>
         <div>
-          <span
-            className="text-[10px] font-bold uppercase tracking-wider"
-            style={{ color: "var(--text-secondary)" }}
-          >
+          <h3 className="font-geist text-xs font-extrabold uppercase tracking-widest text-slate-300">
             {labels.habitSingular === "Quest" ? "Class Attributes" : labels.habitSingular === "Lap" ? "Performance Stats" : labels.habitSingular === "Drill" ? "Skill Attributes" : "Habit Attributes"}
-          </span>
+          </h3>
         </div>
       </div>
 
-      {/* Main Layout Area: Responsive Flex Container */}
-      <div className="flex flex-col md:flex-row items-center gap-6 mt-4">
-        {/* Left Panel: Compact Avatar Builder */}
+      {/* Main Layout Area */}
+      <div className="flex flex-col md:flex-row items-center gap-6 mt-2">
+        {/* Compact Avatar Builder */}
         <div className="flex-shrink-0">
           <AvatarBuilder
             warriorCompletions={warriorCompletions}
             mageCompletions={mageCompletions}
             rogueCompletions={rogueCompletions}
-            size={76}
+            size={84}
           />
         </div>
 
-        {/* Right Panel: Recharts Radar Chart */}
+        {/* Recharts Radar Chart */}
         <div className="flex-1 w-full">
           <ResponsiveContainer width="100%" height={210}>
             <RadarChart cx="50%" cy="50%" outerRadius="65%" data={chartData}>
-              <PolarGrid
-                stroke="var(--border)"
-                strokeOpacity={0.6}
-              />
+              <PolarGrid stroke="#334155" strokeOpacity={0.8} />
               <PolarAngleAxis
                 dataKey="attribute"
                 tick={{
-                  fill: "var(--text-secondary)",
-                  fontSize: 10,
+                  fill: "#cbd5e1",
+                  fontSize: 11,
                   fontWeight: 700,
                 }}
               />
@@ -144,10 +126,10 @@ export default function ClassRadarChart() {
               <Radar
                 name="Attributes"
                 dataKey="value"
-                stroke="var(--accent-purple)"
-                strokeWidth={2}
-                fill="var(--accent-purple)"
-                fillOpacity={0.25}
+                stroke="#8b5cf6"
+                strokeWidth={2.5}
+                fill="#8b5cf6"
+                fillOpacity={0.3}
                 animationDuration={800}
                 animationEasing="ease-out"
               />
@@ -156,20 +138,14 @@ export default function ClassRadarChart() {
         </div>
       </div>
 
-      {/* Score Labels */}
-      <div className="grid grid-cols-4 gap-2 mt-4 pt-3 border-t" style={{ borderColor: "var(--border)" }}>
+      {/* Score Labels Grid */}
+      <div className="grid grid-cols-4 gap-2 mt-4 pt-4 border-t border-slate-700/60">
         {chartData.map((d) => (
           <div key={d.attribute} className="text-center">
-            <div
-              className="text-xs font-black"
-              style={{ color: "var(--text-primary)" }}
-            >
+            <div className="font-sora text-base font-black text-white">
               {d.value}
             </div>
-            <div
-              className="text-[9px] font-bold uppercase tracking-wider"
-              style={{ color: "var(--text-muted)" }}
-            >
+            <div className="font-geist text-[10px] font-extrabold uppercase tracking-wider text-slate-400">
               {d.attribute}
             </div>
           </div>

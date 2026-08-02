@@ -16,7 +16,7 @@ export default function JournalPage() {
           style={{ color: "var(--text-primary)" }}
         >
           <BookOpen className="h-7 w-7 text-purple-400" />
-          {labels.habitSingular === "Quest" ? "Quest Journal" : `${labels.habitSingular} Journal`}
+          {labels.journalLabel}
         </h1>
         <p className="text-sm mt-1" style={{ color: "var(--text-secondary)" }}>
           A scrollable history of your {labels.habitSingular.toLowerCase()} achievements and diary logs.

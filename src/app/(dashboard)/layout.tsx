@@ -23,7 +23,7 @@ export default function DashboardLayout({
 
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: Swords },
-    { label: labels.habitSingular === "Quest" ? "Journal" : `${labels.habitSingular} Journal`, href: "/journal", icon: BookOpen },
+    { label: labels.journalLabel, href: "/journal", icon: BookOpen },
     { label: "Rivals", href: "/rivals", icon: Users },
     { label: "Shop", href: "/shop", icon: ShoppingBag },
     { label: labels.leaderboardLabel, href: "/leaderboard", icon: Trophy },

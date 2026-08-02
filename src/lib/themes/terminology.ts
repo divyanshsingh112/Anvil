@@ -24,6 +24,7 @@ export interface TerminologyPack {
   createActionLabel: string;
   emptyStateLabel: string;
   classSelectorLabel: string;
+  journalLabel: string;
   iconWarrior: string; // lucide icon name
   iconMage: string;
   iconRogue: string;
@@ -56,6 +57,7 @@ export const terminologyPacks: Record<string, TerminologyPack> = {
     createActionLabel: "Create Habit",
     emptyStateLabel: "No habits yet — add your first one",
     classSelectorLabel: "Category",
+    journalLabel: "Habit Journal",
     iconWarrior: "Dumbbell",
     iconMage: "BookOpen",
     iconRogue: "Shuffle",
@@ -86,6 +88,7 @@ export const terminologyPacks: Record<string, TerminologyPack> = {
     createActionLabel: "Forge New Quest",
     emptyStateLabel: "No quests yet — forge your first one",
     classSelectorLabel: "Hero Class",
+    journalLabel: "Quest Journal",
     iconWarrior: "Sword",
     iconMage: "Sparkles",
     iconRogue: "Zap",
@@ -116,6 +119,7 @@ export const terminologyPacks: Record<string, TerminologyPack> = {
     createActionLabel: "Start New Lap",
     emptyStateLabel: "No laps yet — start your first one",
     classSelectorLabel: "Vehicle Spec",
+    journalLabel: "Lap Log",
     iconWarrior: "Gauge",
     iconMage: "Route",
     iconRogue: "Wrench",
@@ -146,6 +150,7 @@ export const terminologyPacks: Record<string, TerminologyPack> = {
     createActionLabel: "Run New Drill",
     emptyStateLabel: "No drills yet — run your first one",
     classSelectorLabel: "Athlete Role",
+    journalLabel: "Drill Log",
     iconWarrior: "Dumbbell",
     iconMage: "Target",
     iconRogue: "Zap",

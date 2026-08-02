@@ -46,12 +46,9 @@ export default function ConsistencyTrendChart() {
 
   if (isLoading) {
     return (
-      <div
-        className="stat-card flex flex-col items-center justify-center"
-        style={{ minHeight: "320px" }}
-      >
+      <div className="glass-card rounded-2xl p-6 border flex flex-col items-center justify-center min-h-[320px]">
         <Loader2 className="h-6 w-6 animate-spin text-teal-500" />
-        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-2">
+        <span className="font-geist text-xs text-slate-400 font-bold uppercase tracking-wider mt-3">
           Loading trend data...
         </span>
       </div>
@@ -60,12 +57,9 @@ export default function ConsistencyTrendChart() {
 
   if (error || !data) {
     return (
-      <div
-        className="stat-card flex flex-col items-center justify-center"
-        style={{ minHeight: "320px" }}
-      >
-        <TrendingUp className="h-6 w-6 text-red-500" />
-        <span className="text-[10px] text-slate-400 font-bold uppercase tracking-wider mt-2">
+      <div className="glass-card rounded-2xl p-6 border flex flex-col items-center justify-center min-h-[320px]">
+        <TrendingUp className="h-6 w-6 text-rose-500" />
+        <span className="font-geist text-xs text-slate-400 font-bold uppercase tracking-wider mt-3">
           Failed to load trend
         </span>
       </div>
@@ -73,54 +67,45 @@ export default function ConsistencyTrendChart() {
   }
 
   return (
-    <div className="stat-card" style={{ minHeight: "320px" }}>
+    <div className="glass-card rounded-2xl p-6 border border-slate-700/60 min-h-[320px] transition-all duration-300">
       {/* Header */}
-      <div className="flex items-center gap-3 mb-2">
-        <div
-          className="flex h-9 w-9 items-center justify-center rounded-lg"
-          style={{
-            backgroundColor: "rgba(13, 148, 136, 0.15)",
-            border: "1px solid rgba(13, 148, 136, 0.3)",
-          }}
-        >
-          <TrendingUp className="h-4 w-4" style={{ color: "var(--accent-teal)" }} />
+      <div className="flex items-center gap-3 mb-4">
+        <div className="flex h-9 w-9 items-center justify-center rounded-xl bg-teal-500/15 border border-teal-500/30 shadow-md">
+          <TrendingUp className="h-4 w-4 text-teal-400" />
         </div>
         <div>
-          <span
-            className="text-[10px] font-bold uppercase tracking-wider"
-            style={{ color: "var(--text-secondary)" }}
-          >
+          <h3 className="font-geist text-xs font-extrabold uppercase tracking-widest text-slate-300">
             6-Month Consistency
-          </span>
+          </h3>
         </div>
       </div>
 
       {/* Chart */}
-      <ResponsiveContainer width="100%" height={260}>
+      <ResponsiveContainer width="100%" height={230}>
         <AreaChart
           data={data}
           margin={{ top: 10, right: 10, left: -20, bottom: 0 }}
         >
           <defs>
-            <linearGradient id="tealGradient" x1="0" y1="0" x2="0" y2="1">
-              <stop offset="5%" stopColor="var(--accent-teal)" stopOpacity={0.4} />
-              <stop offset="95%" stopColor="var(--accent-teal)" stopOpacity={0.05} />
+            <linearGradient id="purpleTealGradient" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="5%" stopColor="#8b5cf6" stopOpacity={0.4} />
+              <stop offset="95%" stopColor="#8b5cf6" stopOpacity={0.0} />
             </linearGradient>
           </defs>
           <XAxis
             dataKey="label"
             tick={{
-              fill: "var(--text-muted)",
+              fill: "#94a3b8",
               fontSize: 11,
-              fontWeight: 600,
+              fontWeight: 700,
             }}
-            axisLine={{ stroke: "var(--border)" }}
+            axisLine={{ stroke: "#334155" }}
             tickLine={false}
           />
           <YAxis
             domain={[0, 100]}
             tick={{
-              fill: "var(--text-muted)",
+              fill: "#94a3b8",
               fontSize: 10,
               fontWeight: 600,
             }}
@@ -133,27 +118,15 @@ export default function ConsistencyTrendChart() {
               if (!active || !payload || payload.length === 0) return null;
               const point = payload[0].payload as TrendPoint;
               return (
-                <div
-                  className="rounded-lg px-3 py-2 text-xs shadow-lg border"
-                  style={{
-                    backgroundColor: "var(--bg-secondary)",
-                    borderColor: "var(--border)",
-                  }}
-                >
-                  <div className="font-bold" style={{ color: "var(--text-primary)" }}>
+                <div className="rounded-xl px-3 py-2 text-xs shadow-xl border bg-slate-900 border-purple-500/30">
+                  <div className="font-bold text-white">
                     {point.label} {point.year}
                   </div>
-                  <div
-                    className="font-extrabold text-sm mt-0.5"
-                    style={{ color: "var(--accent-teal)" }}
-                  >
+                  <div className="font-black text-sm mt-0.5 text-purple-400">
                     {point.percentage}%
                   </div>
                   {!point.hadHabits && point.percentage === 0 && (
-                    <div
-                      className="text-[10px] mt-1 italic"
-                      style={{ color: "var(--text-muted)" }}
-                    >
+                    <div className="text-[10px] mt-1 italic text-slate-400">
                       No habits existed
                     </div>
                   )}
@@ -164,9 +137,9 @@ export default function ConsistencyTrendChart() {
           <Area
             type="monotone"
             dataKey="percentage"
-            stroke="var(--accent-teal)"
-            strokeWidth={2.5}
-            fill="url(#tealGradient)"
+            stroke="#8b5cf6"
+            strokeWidth={3}
+            fill="url(#purpleTealGradient)"
             animationDuration={800}
             animationEasing="ease-out"
           />
@@ -175,17 +148,11 @@ export default function ConsistencyTrendChart() {
 
       {/* Current Month Highlight */}
       {data.length > 0 && (
-        <div className="flex items-center justify-between mt-1">
-          <span
-            className="text-[10px] font-bold uppercase tracking-wider"
-            style={{ color: "var(--text-muted)" }}
-          >
+        <div className="flex items-center justify-between mt-3 pt-3 border-t border-slate-700/60 font-geist">
+          <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
             Current: {data[data.length - 1].label} {data[data.length - 1].year}
           </span>
-          <span
-            className="text-xs font-extrabold"
-            style={{ color: "var(--accent-teal)" }}
-          >
+          <span className="font-sora text-sm font-black text-purple-400">
             {data[data.length - 1].percentage}%
           </span>
         </div>

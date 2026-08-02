@@ -186,3 +186,61 @@ body {
   color: var(--text-primary);
   font-weight: 700;
 }
+
+/* ─── STITCH FORGED DISCIPLINE SYSTEM ────────────────────────── */
+.font-sora {
+  font-family: 'Sora', sans-serif;
+}
+.font-geist {
+  font-family: 'Geist', sans-serif;
+}
+
+.texture-bg {
+  background-image: radial-gradient(circle at 2px 2px, rgba(148, 163, 184, 0.12) 1px, transparent 0);
+  background-size: 32px 32px;
+}
+
+.auth-card-forge {
+  background-color: var(--bg-secondary, #1e293b);
+  border: 1px solid var(--border, #334155);
+  box-shadow: rgba(0, 0, 0, 0.5) 0px 25px 50px -12px, rgba(255, 255, 255, 0.05) 0px 0px 0px 1px inset;
+}
+
+.input-forge {
+  background-color: rgba(15, 23, 42, 0.6);
+  border: 1px solid var(--border, #334155);
+  color: var(--text-primary, #f8fafc);
+  transition: all 0.2s ease;
+}
+.input-forge:focus {
+  border-color: #8b5cf6;
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(139, 92, 246, 0.25);
+}
+.input-error {
+  border-color: #f43f5e !important;
+  box-shadow: 0 0 0 2px rgba(244, 63, 94, 0.2) !important;
+}
+
+.molten-btn {
+  background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%);
+  box-shadow: 0 4px 0 0 #5b21b6, 0 10px 25px -5px rgba(139, 92, 246, 0.4);
+  transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+}
+.molten-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 0 0 #5b21b6, 0 15px 30px -5px rgba(139, 92, 246, 0.5);
+}
+.molten-btn:active:not(:disabled) {
+  transform: translateY(2px);
+  box-shadow: 0 2px 0 0 #5b21b6, 0 5px 15px -5px rgba(139, 92, 246, 0.3);
+}
+
+/* Mobile & Tablet Fine-Tuning */
+@media (max-width: 640px) {
+  .auth-card-forge {
+    padding: 1.25rem !important;
+    border-radius: 1rem !important;
+  }
+}
+
