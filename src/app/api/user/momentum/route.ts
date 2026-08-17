@@ -173,19 +173,26 @@ export async function GET() {
       };
     }
 
-    return NextResponse.json({
-      score,
-      tier,
-      label,
-      intervention,
-      breakdown: {
-        trend: calcs.scoreTrend,
-        streak: calcs.scoreStreak,
-        login: calcs.scoreLogin,
-        consistency: calcs.scoreConsistency,
-        best7: calcs.scoreBest7,
+    return NextResponse.json(
+      {
+        score,
+        tier,
+        label,
+        intervention,
+        breakdown: {
+          trend: calcs.scoreTrend,
+          streak: calcs.scoreStreak,
+          login: calcs.scoreLogin,
+          consistency: calcs.scoreConsistency,
+          best7: calcs.scoreBest7,
+        },
       },
-    });
+      {
+        headers: {
+          "Cache-Control": "private, max-age=30",
+        },
+      }
+    );
   } catch (error) {
     console.error("GET user momentum error:", error);
     return NextResponse.json(

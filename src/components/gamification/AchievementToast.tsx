@@ -1,8 +1,35 @@
 "use client";
 
-import { useEffect, ComponentType } from "react";
-import confetti from "canvas-confetti";
-import * as Icons from "lucide-react";
+import { ComponentType } from "react";
+import {
+  Trophy,
+  Flame,
+  Shield,
+  Sparkles,
+  Crown,
+  Swords,
+  CalendarCheck,
+  Link,
+  Award,
+  Sword,
+  Zap,
+  ShieldAlert,
+} from "lucide-react";
+
+const ACHIEVEMENT_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  Flame,
+  Trophy,
+  Shield,
+  Sparkles,
+  Crown,
+  Swords,
+  CalendarCheck,
+  Link,
+  Award,
+  Sword,
+  Zap,
+  ShieldAlert,
+};
 
 interface Achievement {
   key: string;
@@ -17,50 +44,11 @@ interface AchievementToastProps {
 }
 
 export default function AchievementToast({ achievements, onClose }: AchievementToastProps) {
-  useEffect(() => {
-    if (achievements.length > 0) {
-      // Trigger a massive confetti burst!
-      confetti({
-        particleCount: 150,
-        spread: 80,
-        origin: { y: 0.4 },
-        colors: ["#a855f7", "#ec4899", "#3b82f6", "#eab308"],
-      });
-
-      // Secondary bursts for extra premium feel
-      const duration = 2.5 * 1000;
-      const end = Date.now() + duration;
-
-      const frame = () => {
-        confetti({
-          particleCount: 5,
-          angle: 60,
-          spread: 55,
-          origin: { x: 0 },
-          colors: ["#a855f7", "#3b82f6"],
-        });
-        confetti({
-          particleCount: 5,
-          angle: 120,
-          spread: 55,
-          origin: { x: 1 },
-          colors: ["#ec4899", "#eab308"],
-        });
-
-        if (Date.now() < end) {
-          requestAnimationFrame(frame);
-        }
-      };
-      frame();
-    }
-  }, [achievements]);
-
   if (achievements.length === 0) return null;
 
   return (
     <div
-      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md transition-all duration-300"
-      style={{ animation: "fadeIn 0.3s ease-out" }}
+      className="fixed inset-0 z-50 flex items-center justify-center bg-black/85 backdrop-blur-md transition-all duration-300 animate-in fade-in"
     >
       <div
         className="w-full max-w-md rounded-2xl p-6 text-center border shadow-2xl relative overflow-hidden"
@@ -79,16 +67,16 @@ export default function AchievementToast({ achievements, onClose }: AchievementT
           style={{ backgroundColor: "var(--accent-teal)" }}
         />
 
-        {/* Floating stars decoration */}
+        {/* Floating star/trophy decoration */}
         <div className="flex justify-center mb-6 relative">
           <div
-            className="flex h-20 w-20 items-center justify-center rounded-full border shadow-lg"
+            className="flex h-20 w-20 items-center justify-center rounded-full border shadow-lg animate-bounce"
             style={{
               backgroundColor: "rgba(168, 85, 247, 0.15)",
               borderColor: "var(--accent-purple)",
             }}
           >
-            <Icons.Trophy className="h-10 w-10 text-yellow-400 animate-bounce" />
+            <Trophy className="h-10 w-10 text-yellow-400" />
           </div>
         </div>
 
@@ -102,8 +90,7 @@ export default function AchievementToast({ achievements, onClose }: AchievementT
         {/* Achievement list */}
         <div className="mt-6 flex flex-col gap-3 max-h-60 overflow-y-auto px-2">
           {achievements.map((ach) => {
-            // Dynanically get lucide-react icon
-            const IconComponent = (Icons as unknown as Record<string, ComponentType<{ className?: string }>>)[ach.icon] || Icons.Award;
+            const IconComponent = ACHIEVEMENT_ICONS[ach.icon] || Award;
 
             return (
               <div

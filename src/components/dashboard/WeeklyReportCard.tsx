@@ -1,9 +1,16 @@
 "use client";
 
 import React, { useEffect, useState, ComponentType } from "react";
-import * as Icons from "lucide-react";
-import { Loader2, Award, Trophy } from "lucide-react";
+import { Loader2, Award, Zap, TrendingUp, RotateCcw, Trophy, AlertCircle } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
+
+const REPORT_ICONS: Record<string, ComponentType<{ className?: string; style?: React.CSSProperties }>> = {
+  Award,
+  Zap,
+  TrendingUp,
+  RotateCcw,
+  Trophy,
+};
 
 interface ReportCardData {
   tier: "elite" | "building" | "steady" | "reset";
@@ -56,7 +63,7 @@ export default function WeeklyReportCard() {
   if (error || !report) {
     return (
       <div className="glass-card rounded-2xl p-6 border text-center flex flex-col justify-center items-center gap-2 min-h-[160px]">
-        <Icons.AlertCircle className="h-6 w-6 text-rose-500" />
+        <AlertCircle className="h-6 w-6 text-rose-500" />
         <span className="font-geist text-xs text-slate-400 font-bold uppercase tracking-wider">
           Failed to fetch report card
         </span>
@@ -64,7 +71,7 @@ export default function WeeklyReportCard() {
     );
   }
 
-  const IconComponent = (Icons as unknown as Record<string, ComponentType<{ className?: string; style?: React.CSSProperties }>>)[report.icon] || Trophy;
+  const IconComponent = REPORT_ICONS[report.icon] || Trophy;
 
   return (
     <div

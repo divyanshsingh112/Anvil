@@ -18,7 +18,11 @@ export async function GET() {
     }
 
     const trend = await calculateConsistencyTrend(session.user.id);
-    return NextResponse.json(trend);
+    return NextResponse.json(trend, {
+      headers: {
+        "Cache-Control": "private, max-age=30",
+      },
+    });
   } catch (error) {
     console.error("GET user/consistency-trend error:", error);
     return NextResponse.json(

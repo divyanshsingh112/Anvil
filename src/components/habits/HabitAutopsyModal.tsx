@@ -120,7 +120,7 @@ export default function HabitAutopsyModal({
         {isLoading && (
           <div className="flex flex-col items-center justify-center py-10 gap-3">
             <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-purple-500" />
-            <span className="text-xs font-medium text-slate-400">Synthesizing behavioral metrics with Gemini 2.5 Flash...</span>
+            <span className="text-xs font-medium text-slate-400">Synthesizing behavioral metrics with Gemini 3.6 Flash...</span>
           </div>
         )}
 

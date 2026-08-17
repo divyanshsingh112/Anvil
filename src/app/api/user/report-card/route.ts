@@ -13,7 +13,11 @@ export async function GET() {
     }
 
     const reportCard = await calculateWeeklyReportCard(session.user.id);
-    return NextResponse.json(reportCard);
+    return NextResponse.json(reportCard, {
+      headers: {
+        "Cache-Control": "private, max-age=30",
+      },
+    });
   } catch (error) {
     console.error("GET report-card error:", error);
     return NextResponse.json(

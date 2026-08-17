@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, memo } from "react";
 import { Habit, ResolvedChain } from "@/types";
 import { useLabels } from "@/hooks/useLabels";
 import { Trash2, Link, Check, Loader2 } from "lucide-react";
@@ -11,7 +11,7 @@ interface ChainCardProps {
   onDeleteSuccess: () => void;
 }
 
-export default function ChainCard({
+function ChainCardComponent({
   chain,
   onDeleteSuccess,
 }: ChainCardProps) {
@@ -169,3 +169,5 @@ export default function ChainCard({
     </div>
   );
 }
+
+export default memo(ChainCardComponent);

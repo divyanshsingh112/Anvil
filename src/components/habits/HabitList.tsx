@@ -1,5 +1,6 @@
 "use client";
 
+import { memo } from "react";
 import { Habit, ToggleResponse } from "@/types";
 import HabitCard from "./HabitCard";
 import { useLabels } from "@/hooks/useLabels";
@@ -22,7 +23,7 @@ interface HabitListProps {
   isTodayPeriod: boolean;
 }
 
-export default function HabitList({
+function HabitListComponent({
   habits,
   onEditHabit,
   onArchiveHabit,
@@ -103,3 +104,5 @@ export default function HabitList({
     </div>
   );
 }
+
+export default memo(HabitListComponent);

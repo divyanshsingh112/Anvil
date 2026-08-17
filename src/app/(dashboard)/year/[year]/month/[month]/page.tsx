@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
 import { useParams } from "next/navigation";
 import { useHabitStore } from "@/store/useHabitStore";
 import { useUserStore } from "@/store/useUserStore";
@@ -15,7 +15,6 @@ import StreakBadge from "@/components/gamification/StreakBadge";
 import AchievementToast from "@/components/gamification/AchievementToast";
 import { Habit, ResolvedChain } from "@/types";
 import { Plus, Coins, Trophy, Flame, Loader2 } from "lucide-react";
-import confetti from "canvas-confetti";
 import ChainCard from "@/components/habits/ChainCard";
 import ChainForm from "@/components/habits/ChainForm";
 
@@ -87,7 +86,7 @@ export default function MonthTrackerPage() {
   const [chainFormOpen, setChainFormOpen] = useState(false);
   const [isChainsLoading, setIsChainsLoading] = useState(true);
 
-  const fetchChains = async () => {
+  const fetchChains = useCallback(async () => {
     setIsChainsLoading(true);
     try {
       const res = await fetch("/api/chains");
@@ -100,36 +99,38 @@ export default function MonthTrackerPage() {
     } finally {
       setIsChainsLoading(false);
     }
-  };
+  }, []);
 
   // Check if viewing current real-world period
   const now = new Date();
   const isTodayPeriod =
     year === now.getFullYear() && month === now.getMonth() + 1;
 
-  // Sync the store's current period with URL params and fetch data
+  // Sync the store's current period with URL params and fetch data in parallel
   useEffect(() => {
     if (!isNaN(year) && !isNaN(month) && month >= 1 && month <= 12) {
       setCurrentPeriod(year, month);
-      fetchHabits(year, month);
-      fetchUserStats();
-      fetchChains();
+      Promise.all([
+        fetchHabits(year, month),
+        fetchUserStats(),
+        fetchChains(),
+      ]);
     }
-  }, [year, month, fetchHabits, fetchUserStats, setCurrentPeriod]);
+  }, [year, month, fetchHabits, fetchUserStats, fetchChains, setCurrentPeriod]);
 
-  const handleCreateClick = () => {
+  const handleCreateClick = useCallback(() => {
     setFormMode("create");
     setSelectedHabit(undefined);
     setFormOpen(true);
-  };
+  }, []);
 
-  const handleEditClick = (habit: Habit) => {
+  const handleEditClick = useCallback((habit: Habit) => {
     setFormMode("edit");
     setSelectedHabit(habit);
     setFormOpen(true);
-  };
+  }, []);
 
-  const handleArchiveClick = async (id: string) => {
+  const handleArchiveClick = useCallback(async (id: string) => {
     if (
       confirm(
         `Are you sure you want to archive this ${labels.habitSingular.toLowerCase()}? it will no longer show in active lists.`
@@ -142,9 +143,9 @@ export default function MonthTrackerPage() {
         alert(errorObj.message || `Failed to archive ${labels.habitSingular.toLowerCase()}`);
       }
     }
-  };
+  }, [archiveHabit, labels.habitSingular]);
 
-  const handleToggleHabit = async (
+  const handleToggleHabit = useCallback(async (
     habitId: string,
     completed: boolean,
     options?: {
@@ -174,22 +175,11 @@ export default function MonthTrackerPage() {
         }
         
         if (response.chainCompleted) {
-          confetti({
-            particleCount: 200,
-            spread: 100,
-            origin: { y: 0.6 },
-            colors: ["#fbbf24", "#fb923c", "#f59e0b"],
-          });
           setToastMessage(
             `🔗 CHAIN COMPLETED! "${response.chainCompleted.chainName}" (+${response.chainCompleted.bonusXp} ${labels.xpLabel}) 🔗`
           );
           setTimeout(() => setToastMessage(null), 6000);
         } else if (response.leveledUp) {
-          confetti({
-            particleCount: 150,
-            spread: 80,
-            origin: { y: 0.6 },
-          });
           setToastMessage(
             `✨ LEVEL UP! You reached Level ${response.user.level}! ✨`
           );
@@ -206,9 +196,9 @@ export default function MonthTrackerPage() {
       const errorObj = err as Error;
       alert(errorObj.message || "Failed to toggle completion");
     }
-  };
+  }, [fetchChains, labels.coinsLabel, labels.habitPlural, labels.perfectDayLabel, labels.xpLabel, sessionTimeBucket, toggleCompletion]);
 
-  const handlePromptResolve = async () => {
+  const handlePromptResolve = useCallback(async () => {
     setPromptOpen(false);
     if (pendingToggle) {
       try {
@@ -221,22 +211,11 @@ export default function MonthTrackerPage() {
           fetchChains();
 
           if (response.chainCompleted) {
-            confetti({
-              particleCount: 200,
-              spread: 100,
-              origin: { y: 0.6 },
-              colors: ["#fbbf24", "#fb923c", "#f59e0b"],
-            });
             setToastMessage(
               `🔗 CHAIN COMPLETED! "${response.chainCompleted.chainName}" (+${response.chainCompleted.bonusXp} ${labels.xpLabel}) 🔗`
             );
             setTimeout(() => setToastMessage(null), 6000);
           } else if (response.leveledUp) {
-            confetti({
-              particleCount: 150,
-              spread: 80,
-              origin: { y: 0.6 },
-            });
             setToastMessage(
               `✨ LEVEL UP! You reached Level ${response.user.level}! ✨`
             );
@@ -255,7 +234,7 @@ export default function MonthTrackerPage() {
         setPendingToggle(null);
       }
     }
-  };
+  }, [fetchChains, labels.coinsLabel, labels.habitPlural, labels.habitSingular, labels.perfectDayLabel, labels.xpLabel, pendingToggle, toggleCompletion]);
 
   // Validation
   if (isNaN(year) || isNaN(month) || month < 1 || month > 12) {

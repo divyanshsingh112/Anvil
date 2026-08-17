@@ -1,7 +1,6 @@
 "use client";
 
-import { useState } from "react";
-import { useLabels } from "@/hooks/useLabels";
+import { useState, memo } from "react";
 import { Swords, Calendar, MessageSquare, ShieldAlert, Check, X, Loader2 } from "lucide-react";
 
 interface HabitItem {
@@ -17,14 +16,13 @@ interface RivalCardProps {
   onActionSuccess?: () => void;
 }
 
-export default function RivalCard({
+function RivalCardComponent({
   duel,
   userId,
   userHabits = [],
   type,
   onActionSuccess,
 }: RivalCardProps) {
-  const labels = useLabels();
   const [isAccepting, setIsAccepting] = useState(false);
   const [selectedHabitId, setSelectedHabitId] = useState("");
   const [showHabitSelect, setShowHabitSelect] = useState(false);
@@ -332,3 +330,5 @@ export default function RivalCard({
     </div>
   );
 }
+
+export default memo(RivalCardComponent);

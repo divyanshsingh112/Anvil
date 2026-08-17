@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, Swords, Info, Loader2, Save, HelpCircle } from "lucide-react";
+import { ShieldCheck, Swords, Info, Loader2 } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
 
 export default function SettingsPage() {

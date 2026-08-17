@@ -69,12 +69,19 @@ export async function GET() {
       rivalTies: stats.rivalTies,
     });
 
-    return NextResponse.json({
-      strScore: scores.strScore,
-      intScore: scores.intScore,
-      wisScore: scores.wisScore,
-      chaScore: scores.chaScore,
-    });
+    return NextResponse.json(
+      {
+        strScore: scores.strScore,
+        intScore: scores.intScore,
+        wisScore: scores.wisScore,
+        chaScore: scores.chaScore,
+      },
+      {
+        headers: {
+          "Cache-Control": "private, max-age=30",
+        },
+      }
+    );
   } catch (error) {
     console.error("GET user/attributes error:", error);
     return NextResponse.json(

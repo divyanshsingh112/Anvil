@@ -4,6 +4,7 @@ import { UserGamification } from "@/types";
 interface UserState extends UserGamification {
   isLoading: boolean;
   error: string | null;
+  lastFetched: number | null;
   warriorCompletions: number;
   mageCompletions: number;
   rogueCompletions: number;
@@ -11,12 +12,12 @@ interface UserState extends UserGamification {
   trainingConsentUpdatedAt: string | null;
   consistencyScore?: number;
 
-  fetchUserStats: () => Promise<void>;
+  fetchUserStats: (force?: boolean) => Promise<void>;
   applyToggleResult: (data: UserGamification) => void;
   updateClassCompletions: (classType: "warrior" | "mage" | "rogue", increment: boolean) => void;
 }
 
-export const useUserStore = create<UserState>((set) => ({
+export const useUserStore = create<UserState>((set, get) => ({
   xp: 0,
   level: 1,
   coins: 0,
@@ -34,8 +35,16 @@ export const useUserStore = create<UserState>((set) => ({
   consistencyScore: undefined,
   isLoading: false,
   error: null,
+  lastFetched: null,
 
-  fetchUserStats: async () => {
+  fetchUserStats: async (force = false) => {
+    const state = get();
+    // TTL Guard: Skip if already loading, or if fetched within last 60s (unless forced)
+    if (state.isLoading) return;
+    if (!force && state.lastFetched && Date.now() - state.lastFetched < 60_000) {
+      return;
+    }
+
     set({ isLoading: true, error: null });
     try {
       const res = await fetch("/api/user/stats");
@@ -61,6 +70,7 @@ export const useUserStore = create<UserState>((set) => ({
         trainingConsentUpdatedAt: data.trainingConsentUpdatedAt || null,
         consistencyScore: data.consistencyScore,
         isLoading: false,
+        lastFetched: Date.now(),
       });
     } catch (err) {
       const errorObj = err as Error;

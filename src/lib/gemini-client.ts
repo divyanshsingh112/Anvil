@@ -20,7 +20,7 @@ export async function callAutopsyModel(
   // 1. Check if API key is configured
   if (!apiKey) {
     console.warn("[Gemini] GEMINI_API_KEY not configured — returning graceful fallback");
-    return getFallbackAutopsy("API key not configured");
+    return getFallbackAutopsy();
   }
 
   const systemInstruction = `You are a supportive, concise habit coach in the Anvil habit tracking system.
@@ -75,14 +75,14 @@ STRICT FORMAT RULES:
     };
   } catch (error: any) {
     console.error("[Gemini API Error]:", error?.message || error);
-    return getFallbackAutopsy(error?.message);
+    return getFallbackAutopsy();
   }
 }
 
 /**
  * Clean, supportive fallback output when Gemini is unavailable or errors
  */
-function getFallbackAutopsy(reason?: string): AutopsyModelOutput {
+function getFallbackAutopsy(): AutopsyModelOutput {
   return {
     summaryText:
       "We observed friction with this habit based on your recent execution timing and completion volatility.",

@@ -23,15 +23,14 @@ interface AttributeData {
 
 export default function ClassRadarChart() {
   const labels = useLabels();
-  const { warriorCompletions, mageCompletions, rogueCompletions, fetchUserStats } = useUserStore();
+  const { warriorCompletions, mageCompletions, rogueCompletions } = useUserStore();
   const [attrs, setAttrs] = useState<AttributeData | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     fetchAttributes();
-    fetchUserStats();
-  }, [fetchUserStats]);
+  }, []);
 
   const fetchAttributes = async () => {
     setIsLoading(true);

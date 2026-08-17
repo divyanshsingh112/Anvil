@@ -1,16 +1,47 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, ComponentType } from "react";
 import { signOut } from "next-auth/react";
 import { useUserStore } from "@/store/useUserStore";
 import { useLabels } from "@/hooks/useLabels";
-import * as Icons from "lucide-react";
-import { Coins, Flame, Award, Loader2, LogOut } from "lucide-react";
-import React, { ComponentType } from "react";
+import {
+  Coins,
+  Flame,
+  Award,
+  Loader2,
+  LogOut,
+  Trophy,
+  Shield,
+  Sparkles,
+  Crown,
+  Swords,
+  CalendarCheck,
+  Link,
+  Sword,
+  Zap,
+  ShieldAlert,
+  Lock,
+  Check,
+} from "lucide-react";
 import AvatarBuilder from "@/components/gamification/AvatarBuilder";
 import ProcrastinationFingerprint from "@/components/dashboard/ProcrastinationFingerprint";
 import ArchetypeCard from "@/components/dashboard/ArchetypeCard";
 import MonthForecastWidget from "@/components/dashboard/MonthForecastWidget";
+
+const PROFILE_ACHIEVEMENT_ICONS: Record<string, ComponentType<{ className?: string }>> = {
+  Flame,
+  Trophy,
+  Shield,
+  Sparkles,
+  Crown,
+  Swords,
+  CalendarCheck,
+  Link,
+  Award,
+  Sword,
+  Zap,
+  ShieldAlert,
+};
 
 interface AchievementUI {
   id: string;
@@ -248,7 +279,7 @@ export default function ProfilePage() {
         ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
             {achievements.map((ach) => {
-              const IconComponent = (Icons as unknown as Record<string, ComponentType<{ className?: string }>>)[ach.icon] || Award;
+              const IconComponent = PROFILE_ACHIEVEMENT_ICONS[ach.icon] || Award;
               const isLocked = !ach.unlocked;
 
               return (
@@ -301,14 +332,14 @@ export default function ProfilePage() {
                     <div>
                       {isLocked ? (
                         <span className="text-slate-500 uppercase tracking-wider flex items-center gap-1">
-                          <Icons.Lock className="h-3 w-3" /> Locked
+                          <Lock className="h-3 w-3" /> Locked
                         </span>
                       ) : (
                         <span
                           className="uppercase tracking-wider flex items-center gap-1"
                           style={{ color: "var(--accent-teal)" }}
                         >
-                          <Icons.Check className="h-3 w-3" /> Unlocked
+                          <Check className="h-3 w-3" /> Unlocked
                           {ach.unlockedAt && (
                             <span className="text-[9px] text-slate-500 normal-case font-normal ml-0.5">
                               on {new Date(ach.unlockedAt).toLocaleDateString()}

@@ -22,7 +22,7 @@ export async function triggerLazyMomentumRecalculation(
   const todayStr = `${today.getUTCFullYear()}-${String(today.getUTCMonth() + 1).padStart(2, "0")}-${String(today.getUTCDate()).padStart(2, "0")}`;
 
   // 1. Fetch current profile
-  let profile = await prisma.mlUserProfile.findUnique({
+  const profile = await prisma.mlUserProfile.findUnique({
     where: { userId },
   });
 

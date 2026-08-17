@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ArrowUpRight, ArrowDownRight, Check, X, ShieldAlert } from "lucide-react";
+import { ArrowUpRight, ArrowDownRight, Check, X } from "lucide-react";
 
 interface DifficultySuggestionProps {
   habitId: string;

@@ -1,12 +1,13 @@
 "use client";
 
-import { useState, useEffect } from "react";
+import { useState, useEffect, memo } from "react";
 import { isSameDay } from "date-fns";
 import { toZonedTime } from "date-fns-tz";
 import { Habit, ToggleResponse } from "@/types";
-import { Sword, Sparkles, Zap, Edit2, Trash2, Clock, MessageSquare, Check, Loader2 } from "lucide-react";
+import { Sword, Sparkles, Zap, Edit2, Trash2, Clock, MessageSquare, Check, Loader2, Stethoscope } from "lucide-react";
 import { useHabitStore } from "@/store/useHabitStore";
 import { useLabels } from "@/hooks/useLabels";
+import HabitAutopsyModal from "./HabitAutopsyModal";
 
 interface HabitCardProps {
   habit: Habit;
@@ -26,7 +27,7 @@ interface HabitCardProps {
 
 const DAYS_OF_WEEK = ["S", "M", "T", "W", "T", "F", "S"];
 
-export default function HabitCard({
+function HabitCardComponent({
   habit,
   onEdit,
   onArchive,
@@ -38,6 +39,7 @@ export default function HabitCard({
   const [showNoteInput, setShowNoteInput] = useState(false);
   const [noteText, setNoteText] = useState("");
   const [isSavingNote, setIsSavingNote] = useState(false);
+  const [showAutopsy, setShowAutopsy] = useState(false);
 
   const getThemedDifficulty = (difficulty: string) => {
     if (difficulty === "novice") return labels.difficultyNovice;
@@ -257,6 +259,13 @@ export default function HabitCard({
 
         <div className="flex items-center gap-2">
           <button
+            onClick={() => setShowAutopsy(true)}
+            className="rounded-lg p-2 transition-colors hover:bg-purple-950/40 text-purple-400 hover:text-purple-300"
+            title={`AI ${labels.habitSingular} Autopsy`}
+          >
+            <Stethoscope className="h-4 w-4" />
+          </button>
+          <button
             onClick={() => onEdit(habit)}
             className="rounded-lg p-2 transition-colors hover:bg-slate-800"
             title={`Edit ${labels.habitSingular}`}
@@ -410,6 +419,16 @@ export default function HabitCard({
           )}
         </>
       )}
+
+      {/* AI Habit Autopsy Modal */}
+      <HabitAutopsyModal
+        habitId={habit.id}
+        habitName={habit.name}
+        isOpen={showAutopsy}
+        onClose={() => setShowAutopsy(false)}
+      />
     </div>
   );
 }
+
+export default memo(HabitCardComponent);
