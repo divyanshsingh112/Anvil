@@ -16,5 +16,7 @@ export const config = {
     "/profile/:path*",
     "/journal/:path*",
     "/rivals/:path*",
+    "/settings/:path*",
   ],
 };
+

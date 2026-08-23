@@ -311,7 +311,7 @@ export default function MonthTrackerPage() {
               Best {labels.streakLabel}
             </div>
             <div className="text-xl font-black text-white">
-              {longestStreak} days
+              {longestStreak} {longestStreak === 1 ? "day" : "days"}
             </div>
             <div className="text-[10px] text-slate-400 font-semibold">
               All-time record

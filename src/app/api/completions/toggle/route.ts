@@ -2,7 +2,7 @@ import { NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { Prisma } from "@prisma/client";
 import { authOptions } from "@/lib/auth";
-import { prisma } from "@/lib/prisma";
+import { prismaDirect } from "@/lib/prisma";
 import { processCompletionToggle } from "@/lib/services/completion-service";
 
 export async function POST(request: Request) {
@@ -23,8 +23,8 @@ export async function POST(request: Request) {
       );
     }
 
-    // Run the toggle operation inside a single atomic database transaction (Phase 11.5 logic)
-    const result = await prisma.$transaction(
+    // Run the toggle operation inside a single atomic database transaction using prismaDirect (direct session connection on port 5432)
+    const result = await prismaDirect.$transaction(
       async (tx: Prisma.TransactionClient) => {
         return await processCompletionToggle(tx, userId, habitId, completed, {
           timeBucket,
@@ -36,17 +36,25 @@ export async function POST(request: Request) {
     );
 
     // Post-toggle Non-Critical Async Side Effects (dispatched AFTER transaction commits)
-    // Non-blocking fire-and-forget: failures log only and never affect toggle status or rollback transaction
+    // Each side effect is individually guarded so a dynamic import or execution failure never impacts the response.
     Promise.allSettled([
-      import("@/lib/services/momentum-service").then(({ triggerLazyMomentumRecalculation }) =>
-        triggerLazyMomentumRecalculation(userId, new Date(), true)
-      ),
-      import("@/lib/services/archetype-service").then(({ triggerLazyArchetypeClassification }) =>
-        triggerLazyArchetypeClassification(userId, new Date(), true)
-      ),
-    ]).catch((err) => {
-      console.error("[Post-Toggle Async Side Effect Error]:", err);
-    });
+      (async () => {
+        try {
+          const { triggerLazyMomentumRecalculation } = await import("@/lib/services/momentum-service");
+          await triggerLazyMomentumRecalculation(userId, new Date(), true);
+        } catch (err) {
+          console.error("[Post-Toggle Momentum Recalc Error]:", err);
+        }
+      })(),
+      (async () => {
+        try {
+          const { triggerLazyArchetypeClassification } = await import("@/lib/services/archetype-service");
+          await triggerLazyArchetypeClassification(userId, new Date(), true);
+        } catch (err) {
+          console.error("[Post-Toggle Archetype Classification Error]:", err);
+        }
+      })(),
+    ]);
 
     return NextResponse.json(result);
   } catch (error) {

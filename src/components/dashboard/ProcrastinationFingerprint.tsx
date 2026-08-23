@@ -7,6 +7,7 @@ import { useLabels } from "@/hooks/useLabels";
 interface ProcrastinationResponse {
   dangerZoneHours: number[] | "insufficient_data";
   lastMinuteRate: number | "insufficient_data";
+  procrastinationScore: number | "insufficient_data";
   avoidancePattern: {
     avoidedClass: string;
     substituteClass: string;
@@ -91,29 +92,37 @@ export default function ProcrastinationFingerprint() {
       }}
     >
       {/* Header */}
-      <div className="flex items-center gap-2.5 border-b pb-4" style={{ borderColor: "var(--border)" }}>
-        <div
-          className="flex h-9 w-9 items-center justify-center rounded-lg border"
-          style={{
-            backgroundColor: "rgba(168, 85, 247, 0.1)",
-            borderColor: "rgba(168, 85, 247, 0.2)",
-          }}
-        >
-          <Brain className="h-4 w-4 text-purple-400" />
+      <div className="flex items-center justify-between border-b pb-4" style={{ borderColor: "var(--border)" }}>
+        <div className="flex items-center gap-2.5">
+          <div
+            className="flex h-9 w-9 items-center justify-center rounded-lg border"
+            style={{
+              backgroundColor: "rgba(168, 85, 247, 0.1)",
+              borderColor: "rgba(168, 85, 247, 0.2)",
+            }}
+          >
+            <Brain className="h-4 w-4 text-purple-400" />
+          </div>
+          <div>
+            <h2 className="text-sm font-black text-white uppercase tracking-wider">Procrastination Fingerprint</h2>
+            <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Machine Learning Self-Awareness Panel</p>
+          </div>
         </div>
-        <div>
-          <h2 className="text-sm font-black text-white uppercase tracking-wider">Procrastination Fingerprint</h2>
-          <p className="text-[10px] text-slate-500 font-bold uppercase mt-0.5">Machine Learning Self-Awareness Panel</p>
-        </div>
+        {typeof data.procrastinationScore === "number" && (
+          <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-full border bg-purple-950/40 border-purple-800/60">
+            <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider">Score</span>
+            <span className="text-xs font-black text-purple-400">{data.procrastinationScore}/100</span>
+          </div>
+        )}
       </div>
 
       {/* Grid of 3 insights */}
       <div className="flex flex-col gap-5">
-        {/* 1. Danger Zone */}
+        {/* 1. Danger Zone / Average Execution Window */}
         <div className="flex flex-col gap-2">
           <div className="flex items-center gap-2">
             <ShieldAlert className="h-4 w-4 text-amber-500" />
-            <h3 className="text-xs font-bold text-white uppercase tracking-wide">Daily Danger Zone Hours</h3>
+            <h3 className="text-xs font-bold text-white uppercase tracking-wide">Average Execution Window</h3>
           </div>
           
           {dangerZoneHours === "insufficient_data" ? (
@@ -130,7 +139,7 @@ export default function ProcrastinationFingerprint() {
                   {formatHour(dangerZoneHours[0])} - {formatHour((dangerZoneHours[2] + 1) % 24)}
                 </p>
                 <p className="text-[9px] text-slate-400 leading-snug mt-1 font-semibold">
-                  This 3-hour waking window represents the period during which your scheduled activities are completed least frequently.
+                  This 3-hour window represents your average daily completion timing (temporal centroid). Earlier windows reflect proactive frontloaded execution.
                 </p>
               </div>
             </div>

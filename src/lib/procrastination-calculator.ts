@@ -18,74 +18,95 @@ export interface FingerprintResult {
 }
 
 export const PROCRASTINATION_WEIGHTS = {
-  LAST_MINUTE_RATE: 0.40,
-  AVOIDANCE_PATTERN: 0.35,
-  STREAK_VOLATILITY: 0.25,
-  NIGHT_OWL_DAMPENING: 0.50,
+  LAST_MINUTE_RATE: 0.50,
+  DANGER_ZONE: 0.30,
+  AVOIDANCE_SUBSTITUTION: 0.20,
 } as const;
 
 /**
+ * Calculates dangerZoneScore using Approach B (Mean Active Hour / Temporal Centroid).
+ * 
+ * Formula:
+ * meanActiveHour = Σ(hour × count) / Σ(count)
+ * dangerZoneScore = (clamp(meanActiveHour, 6, 23) - 6) / 17 × 100
+ * 
+ * - Early Bird (7 AM - 10 AM, mean = 8.0): (8 - 6)/17 * 100 = 11.76
+ * - Late Finisher (9 PM - Midnight, mean = 22.0): (22 - 6)/17 * 100 = 94.12
+ * - Midday (12 PM - 3 PM, mean = 13.0): (13 - 6)/17 * 100 = 41.18
+ */
+export function calculateDangerZoneScore(
+  meanActiveHour: number | "insufficient_data"
+): number | "insufficient_data" {
+  if (
+    meanActiveHour === "insufficient_data" ||
+    typeof meanActiveHour !== "number" ||
+    isNaN(meanActiveHour)
+  ) {
+    return "insufficient_data";
+  }
+
+  const clampedMean = Math.min(23, Math.max(6, meanActiveHour));
+  const rawScore = ((clampedMean - 6) / 17) * 100;
+  return parseFloat(Math.min(100, Math.max(0, rawScore)).toFixed(2));
+}
+
+/**
  * Calculates the multi-factor Composite Procrastination Score (0 - 100).
- * Combines lastMinuteRate, avoidancePattern strength, streakVolatility, and Night Owl archetype dampening.
+ * Formula: 0.50 * lastMinuteRate + 0.30 * dangerZoneScore + 0.20 * avoidanceScore
+ * 
+ * Sparse Data Protection:
+ * - If lastMinuteRate is "insufficient_data" (completions < 10), returns "insufficient_data" to protect new users.
+ * - If partialDaysCount < 5, avoidance is unmeasured and dynamically excluded from the denominator.
  */
 export function calculateCompositeProcrastinationScore(
   lastMinuteRate: number | "insufficient_data",
+  dangerZoneScore: number | "insufficient_data",
   avoidancePattern: AvoidancePattern | null,
-  streakVolatility: number,
-  archetype: string,
   partialDaysCount: number = 0
 ): number | "insufficient_data" {
   if (lastMinuteRate === "insufficient_data") {
     return "insufficient_data";
   }
 
-  // 1. Raw Signals (0 - 100 scale)
+  // 1. Last-Minute Rate Signal (0 - 100 scale, 50% weight)
   const lastMinuteSignal = Number(lastMinuteRate) || 0;
-  const volatilitySignal = Math.min(100, Math.max(0, streakVolatility * 100));
+  const lastMinuteWeight = PROCRASTINATION_WEIGHTS.LAST_MINUTE_RATE;
 
-  // 2. Split Avoidance Pattern Null-Handling Logic:
-  // - Case C (Pattern detected): rate >= 70%, partialDays >= 5. Signal = rate * 100, include 0.35 in denominator.
-  // - Case B (Assessed, low-avoidance): partialDays >= 5, rate < 70%. Signal = 0, include 0.35 in denominator (rewards proven non-avoidance).
-  // - Case A (Insufficient partial days): partialDays < 5. Avoidance is unmeasured -> Exclude 0.35 weight from denominator.
+  // 2. Danger Zone Timing Signal (0 - 100 scale, 30% weight)
+  const dangerZoneSignal =
+    dangerZoneScore === "insufficient_data" ? 0 : Number(dangerZoneScore);
+  const dangerZoneWeight =
+    dangerZoneScore === "insufficient_data" ? 0 : PROCRASTINATION_WEIGHTS.DANGER_ZONE;
+
+  // 3. Avoidance Substitution Signal (0 - 100 scale, 20% weight)
+  // - Case C (Pattern detected): rate >= 70%, partialDays >= 5 -> rate * 100 (weight 0.20)
+  // - Case B (Assessed, non-avoidance): partialDays >= 5, rate < 70% -> 0 (weight 0.20, rewards non-avoidance)
+  // - Case A (Sparse partial days): partialDays < 5 -> unmeasured, exclude weight from denominator
   let avoidanceSignal = 0;
-  let includeAvoidanceWeight = false;
+  let avoidanceWeight = 0;
 
   if (avoidancePattern !== null) {
     avoidanceSignal = Math.min(100, Math.max(0, avoidancePattern.rate * 100));
-    includeAvoidanceWeight = true;
+    avoidanceWeight = PROCRASTINATION_WEIGHTS.AVOIDANCE_SUBSTITUTION;
   } else if (partialDaysCount >= 5) {
     avoidanceSignal = 0;
-    includeAvoidanceWeight = true;
+    avoidanceWeight = PROCRASTINATION_WEIGHTS.AVOIDANCE_SUBSTITUTION;
   } else {
     avoidanceSignal = 0;
-    includeAvoidanceWeight = false;
+    avoidanceWeight = 0; // Excluded from denominator to prevent skewing new users
   }
-
-  // 3. Archetype Adjustment (Dampen last-minute contribution for Night Owls)
-  const isNightOwl = (archetype || "").toLowerCase() === "night_owl";
-  const adjustedLastMinuteSignal = isNightOwl
-    ? lastMinuteSignal * PROCRASTINATION_WEIGHTS.NIGHT_OWL_DAMPENING
-    : lastMinuteSignal;
-
-  const lastMinuteWeight = isNightOwl
-    ? PROCRASTINATION_WEIGHTS.LAST_MINUTE_RATE * PROCRASTINATION_WEIGHTS.NIGHT_OWL_DAMPENING
-    : PROCRASTINATION_WEIGHTS.LAST_MINUTE_RATE;
-
-  const avoidanceWeight = includeAvoidanceWeight ? PROCRASTINATION_WEIGHTS.AVOIDANCE_PATTERN : 0;
-  const volatilityWeight = PROCRASTINATION_WEIGHTS.STREAK_VOLATILITY;
 
   // 4. Weighted Sum & Effective Weight Normalization
   const weightedSum =
-    adjustedLastMinuteSignal * PROCRASTINATION_WEIGHTS.LAST_MINUTE_RATE +
-    avoidanceSignal * PROCRASTINATION_WEIGHTS.AVOIDANCE_PATTERN +
-    volatilitySignal * PROCRASTINATION_WEIGHTS.STREAK_VOLATILITY;
+    lastMinuteSignal * lastMinuteWeight +
+    dangerZoneSignal * dangerZoneWeight +
+    avoidanceSignal * avoidanceWeight;
 
-  const effectiveWeight = lastMinuteWeight + avoidanceWeight + volatilityWeight;
+  const effectiveWeight = lastMinuteWeight + dangerZoneWeight + avoidanceWeight;
 
-  if (effectiveWeight <= 0) return 0;
+  if (effectiveWeight <= 0) return "insufficient_data";
 
   const score = Math.round(weightedSum / effectiveWeight);
-
   return Math.min(100, Math.max(0, score));
 }
 
@@ -164,30 +185,25 @@ export async function calculateProcrastinationFingerprint(
 
   // --- DANGER ZONE & LAST MINUTE THRESHOLD ---
   const MIN_COMPLETIONS_THRESHOLD = 10;
-  
   let dangerZoneHours: number[] | "insufficient_data" = "insufficient_data";
   let lastMinuteRate: number | "insufficient_data" = "insufficient_data";
+  let meanActiveHour: number | "insufficient_data" = "insufficient_data";
 
   if (completionsCount >= MIN_COMPLETIONS_THRESHOLD) {
-    // A. Danger Zone Hours (Rolling 3-hour window between 6 AM and 11 PM with lowest completions count)
-    const hourCounts = new Array(24).fill(0);
+    // A. Mean Active Hour / Temporal Centroid Calculation (Approach B)
+    let totalHourWeight = 0;
     for (const c of nonSkipCompletions) {
-      const hour = new Date(c.completedAt).getHours();
-      hourCounts[hour]++;
+      const rawHour = new Date(c.completedAt).getHours();
+      // Map late-night hours (0-4 AM) as end-of-day continuation (24-28)
+      const logicalHour = rawHour < 6 ? rawHour + 24 : rawHour;
+      totalHourWeight += logicalHour;
     }
+    meanActiveHour = totalHourWeight / completionsCount;
+    const clampedMean = Math.min(23, Math.max(6, meanActiveHour));
 
-    let lowestCount = Infinity;
-    let bestStartHour = 6;
-
-    // Slide 3-hour window from 6 AM to 9 PM (so window fits inside 6 AM - 11 PM waking hours)
-    for (let h = 6; h <= 21; h++) {
-      const count = hourCounts[h] + hourCounts[h + 1] + hourCounts[h + 2];
-      if (count < lowestCount) {
-        lowestCount = count;
-        bestStartHour = h;
-      }
-    }
-    dangerZoneHours = [bestStartHour, bestStartHour + 1, bestStartHour + 2];
+    // Primary execution window representing the 3-hour centroid span
+    const centerHour = Math.floor(clampedMean);
+    dangerZoneHours = [centerHour, (centerHour + 1) % 24, (centerHour + 2) % 24];
 
     // B. Last-Minute Rate (completions at or after 10PM, or before 5AM)
     let lateCount = 0;
@@ -303,13 +319,11 @@ export async function calculateProcrastinationFingerprint(
     }
   }
 
-  const streakVolatility = options?.streakVolatility ?? 0;
-  const archetype = options?.archetype ?? "steady_strategist";
+  const dangerZoneScore = calculateDangerZoneScore(meanActiveHour);
   const procrastinationScore = calculateCompositeProcrastinationScore(
     lastMinuteRate,
+    dangerZoneScore,
     avoidancePattern,
-    streakVolatility,
-    archetype,
     partialDaysCount
   );
 

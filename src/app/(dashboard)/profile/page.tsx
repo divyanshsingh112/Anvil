@@ -95,6 +95,16 @@ export default function ProfilePage() {
 
   const unlockedCount = achievements.filter((a) => a.unlocked).length;
 
+  // Level XP progress derived from calculateLevel: level = Math.floor(Math.sqrt(xp / 100)) + 1
+  const currentLevelBaseXp = Math.pow(level - 1, 2) * 100;
+  const nextLevelBaseXp = Math.pow(level, 2) * 100;
+  const xpInCurrentLevel = Math.max(0, xp - currentLevelBaseXp);
+  const xpNeededForLevel = Math.max(1, nextLevelBaseXp - currentLevelBaseXp);
+  const levelProgressPercent = Math.min(
+    100,
+    Math.max(0, Math.round((xpInCurrentLevel / xpNeededForLevel) * 100))
+  );
+
   return (
     <main
       className="min-h-screen py-10 px-4 max-w-6xl mx-auto"
@@ -146,7 +156,7 @@ export default function ProfilePage() {
             <div className="mt-4 max-w-md mx-auto md:mx-0">
               <div className="flex justify-between text-xs font-semibold mb-1">
                 <span>{labels.xpLabel} Progress</span>
-                <span>{xp % 100} / 100 {labels.xpLabel}</span>
+                <span>{xpInCurrentLevel} / {xpNeededForLevel} {labels.xpLabel}</span>
               </div>
               <div
                 className="w-full h-2 rounded-full overflow-hidden"
@@ -155,7 +165,7 @@ export default function ProfilePage() {
                 <div
                   className="h-full rounded-full transition-all duration-500"
                   style={{
-                    width: `${xp % 100}%`,
+                    width: `${levelProgressPercent}%`,
                     backgroundColor: "var(--accent-purple)",
                   }}
                 />
@@ -198,7 +208,7 @@ export default function ProfilePage() {
                   Current {labels.streakLabel}
                 </div>
                 <div className="text-base font-extrabold text-orange-400">
-                  {streak} days
+                  {streak} {streak === 1 ? "day" : "days"}
                 </div>
               </div>
             </div>
@@ -217,7 +227,7 @@ export default function ProfilePage() {
                   Max {labels.streakLabel}
                 </div>
                 <div className="text-base font-extrabold text-teal-400">
-                  {longestStreak} days
+                  {longestStreak} {longestStreak === 1 ? "day" : "days"}
                 </div>
               </div>
             </div>

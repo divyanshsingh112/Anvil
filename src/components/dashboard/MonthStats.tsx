@@ -113,7 +113,7 @@ export default function MonthStats({ year, month }: MonthStatsProps) {
           </span>
         </div>
         <div className="text-3xl font-black" style={{ color: "var(--text-primary)" }}>
-          {streak} <span className="text-base font-semibold" style={{ color: "var(--text-secondary)" }}>days</span>
+          {streak} <span className="text-base font-semibold" style={{ color: "var(--text-secondary)" }}>{streak === 1 ? "day" : "days"}</span>
         </div>
         {FEATURE_CONSISTENCY_SCORE && consistencyScore !== undefined && (
           <p className="text-[11px] mt-0.5 font-medium text-slate-400">

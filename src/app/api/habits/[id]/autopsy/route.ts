@@ -110,6 +110,7 @@ export async function POST(
         dangerZoneHours: fingerprint.dangerZoneHours,
         avoidancePattern: fingerprint.avoidancePattern,
         lastMinuteRate: fingerprint.lastMinuteRate,
+        procrastinationScore: fingerprint.procrastinationScore,
       },
       phase21Archetype: archetypeResult.archetype,
       phase22DifficultySuggestion: {

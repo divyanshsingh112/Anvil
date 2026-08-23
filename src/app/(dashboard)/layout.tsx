@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useEffect } from "react";
 import { signOut } from "next-auth/react";
-import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen, LogOut, Users } from "lucide-react";
+import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen, LogOut, Users, Settings, CalendarCheck } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
 
 export default function DashboardLayout({
@@ -23,12 +23,24 @@ export default function DashboardLayout({
 
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: Swords },
+    { label: labels.habitPlural, href: "/habits", icon: CalendarCheck },
     { label: labels.journalLabel, href: "/journal", icon: BookOpen },
     { label: "Rivals", href: "/rivals", icon: Users },
     { label: "Shop", href: "/shop", icon: ShoppingBag },
     { label: labels.leaderboardLabel, href: "/leaderboard", icon: Trophy },
     { label: "Profile", href: "/profile", icon: User },
+    { label: "Settings", href: "/settings", icon: Settings },
   ];
+
+  const isItemActive = (href: string) => {
+    if (href === "/dashboard") {
+      return pathname === "/dashboard";
+    }
+    if (href === "/habits") {
+      return pathname === "/habits" || pathname.startsWith("/habits/") || pathname.startsWith("/year");
+    }
+    return pathname === href || pathname.startsWith(href + "/");
+  };
 
   const handleLogout = () => {
     signOut({ callbackUrl: "/login" });
@@ -62,7 +74,7 @@ export default function DashboardLayout({
           <nav className="hidden sm:flex items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
-              const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+              const isActive = isItemActive(item.href);
 
               return (
                 <Link
@@ -122,18 +134,18 @@ export default function DashboardLayout({
 
         {/* Mobile Navigation Links (shown below top bar on mobile) */}
         <div
-          className="flex sm:hidden border-t items-center justify-around py-2"
+          className="flex sm:hidden border-t items-center justify-around py-2 overflow-x-auto"
           style={{ borderColor: "var(--border)" }}
         >
           {navItems.map((item) => {
             const Icon = item.icon;
-            const isActive = pathname === item.href || pathname.startsWith(item.href + "/");
+            const isActive = isItemActive(item.href);
 
             return (
               <Link
                 key={item.href}
                 href={item.href}
-                className="flex flex-col items-center gap-1 text-[9px] font-bold uppercase tracking-wider transition-all duration-200"
+                className="flex flex-col items-center gap-1 text-[9px] font-bold uppercase tracking-wider transition-all duration-200 shrink-0 px-2"
                 style={{
                   color: isActive ? "white" : "var(--text-muted)",
                 }}
