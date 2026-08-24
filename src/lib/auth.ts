@@ -9,7 +9,7 @@ const baseAdapter = PrismaAdapter(prisma);
 const adapter = {
   ...baseAdapter,
   createUser: (data: any) => {
-    const { name, image, ...rest } = data;
+    const { name, image, emailVerified, ...rest } = data;
     return prisma.user.create({
       data: {
         ...rest,
