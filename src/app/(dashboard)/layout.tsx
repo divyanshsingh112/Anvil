@@ -3,9 +3,9 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
-import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen, LogOut, Users, Settings, CalendarCheck } from "lucide-react";
+import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen, LogOut, Users, Settings, CalendarCheck, Menu, X } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
 
 export default function DashboardLayout({
@@ -16,10 +16,37 @@ export default function DashboardLayout({
   const pathname = usePathname();
   const { coins, level, fetchUserStats } = useUserStore();
   const labels = useLabels();
+  const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
   useEffect(() => {
     fetchUserStats();
   }, []);
+
+  // Close drawer on route change
+  useEffect(() => {
+    setIsDrawerOpen(false);
+  }, [pathname]);
+
+  // Handle ESC key to close drawer & lock background scroll
+  useEffect(() => {
+    const handleKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") {
+        setIsDrawerOpen(false);
+      }
+    };
+
+    if (isDrawerOpen) {
+      document.body.style.overflow = "hidden";
+      window.addEventListener("keydown", handleKeyDown);
+    } else {
+      document.body.style.overflow = "";
+    }
+
+    return () => {
+      document.body.style.overflow = "";
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [isDrawerOpen]);
 
   const navItems = [
     { label: "Dashboard", href: "/dashboard", icon: Swords },
@@ -70,8 +97,8 @@ export default function DashboardLayout({
             <span className="text-lg font-black tracking-wider text-white">ANVIL</span>
           </Link>
 
-          {/* Navigation Links */}
-          <nav className="hidden sm:flex items-center gap-1">
+          {/* Navigation Links (Desktop 768px+) */}
+          <nav className="hidden md:flex items-center gap-1">
             {navItems.map((item) => {
               const Icon = item.icon;
               const isActive = isItemActive(item.href);
@@ -93,11 +120,11 @@ export default function DashboardLayout({
             })}
           </nav>
 
-          {/* User Status Stats & Logout Widget */}
-          <div className="flex items-center gap-3 shrink-0">
+          {/* User Status Stats & Action Widget */}
+          <div className="flex items-center gap-2 sm:gap-3 shrink-0">
             {/* Coins */}
             <div
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border text-xs font-bold"
               style={{
                 backgroundColor: "var(--bg-secondary)",
                 borderColor: "var(--border)",
@@ -109,7 +136,7 @@ export default function DashboardLayout({
 
             {/* Level */}
             <div
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-lg border text-xs font-bold"
               style={{
                 backgroundColor: "rgba(168, 85, 247, 0.15)",
                 borderColor: "rgba(168, 85, 247, 0.3)",
@@ -120,53 +147,146 @@ export default function DashboardLayout({
               <span>{labels.levelLabel === "Level" ? "LVL" : labels.levelLabel.toUpperCase()} {level}</span>
             </div>
 
-            {/* Log Out Button */}
+            {/* Desktop Log Out Button */}
             <button
               onClick={handleLogout}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all duration-200 hover:bg-red-500/20 hover:border-red-500/40 text-red-400 border-red-500/20"
+              className="hidden md:flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all duration-200 hover:bg-red-500/20 hover:border-red-500/40 text-red-400 border-red-500/20"
               title="Log out of session"
             >
               <LogOut className="h-4 w-4" />
-              <span className="hidden md:inline">Log Out</span>
+              <span>Log Out</span>
+            </button>
+
+            {/* Mobile Hamburger Button (<768px) */}
+            <button
+              type="button"
+              onClick={() => setIsDrawerOpen((prev) => !prev)}
+              aria-label={isDrawerOpen ? "Close navigation menu" : "Open navigation menu"}
+              aria-expanded={isDrawerOpen}
+              className="flex md:hidden items-center justify-center min-h-[44px] min-w-[44px] rounded-lg border transition-all duration-200"
+              style={{
+                backgroundColor: "var(--bg-secondary)",
+                borderColor: "var(--border)",
+                color: isDrawerOpen ? "var(--accent-purple)" : "var(--text-primary)",
+              }}
+            >
+              {isDrawerOpen ? <X className="h-5 w-5" /> : <Menu className="h-5 w-5" />}
             </button>
           </div>
         </div>
+      </header>
 
-        {/* Mobile Navigation Links (shown below top bar on mobile) */}
-        <div
-          className="flex sm:hidden border-t items-center justify-around py-2 overflow-x-auto"
-          style={{ borderColor: "var(--border)" }}
-        >
-          {navItems.map((item) => {
-            const Icon = item.icon;
-            const isActive = isItemActive(item.href);
+      {/* Mobile Drawer Backdrop & Sheet (<768px) */}
+      {isDrawerOpen && (
+        <div className="fixed inset-0 z-50 md:hidden flex justify-end">
+          {/* Backdrop overlay */}
+          <div
+            className="fixed inset-0 bg-black/60 backdrop-blur-sm transition-opacity duration-300"
+            onClick={() => setIsDrawerOpen(false)}
+            aria-hidden="true"
+          />
 
-            return (
-              <Link
-                key={item.href}
-                href={item.href}
-                className="flex flex-col items-center gap-1 text-[9px] font-bold uppercase tracking-wider transition-all duration-200 shrink-0 px-2"
+          {/* Drawer sheet panel */}
+          <div
+            role="dialog"
+            aria-modal="true"
+            aria-label="Navigation drawer"
+            className="relative z-10 w-[280px] max-w-[85vw] h-full flex flex-col border-l shadow-2xl overflow-y-auto"
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              borderColor: "var(--border)",
+            }}
+          >
+            {/* Drawer Header */}
+            <div
+              className="h-16 px-4 flex items-center justify-between border-b shrink-0"
+              style={{ borderColor: "var(--border)" }}
+            >
+              <div className="flex items-center gap-2">
+                <div
+                  className="flex h-8 w-8 items-center justify-center rounded-lg"
+                  style={{
+                    background: "linear-gradient(135deg, var(--accent-purple) 0%, var(--accent-teal) 100%)",
+                  }}
+                >
+                  <Swords className="h-4 w-4 text-white" />
+                </div>
+                <span className="text-sm font-black tracking-wider text-white">ANVIL</span>
+              </div>
+
+              <button
+                type="button"
+                onClick={() => setIsDrawerOpen(false)}
+                aria-label="Close navigation menu"
+                className="flex items-center justify-center min-h-[44px] min-w-[44px] rounded-lg border transition-all duration-200"
                 style={{
-                  color: isActive ? "white" : "var(--text-muted)",
+                  backgroundColor: "var(--bg-tertiary)",
+                  borderColor: "var(--border)",
+                  color: "var(--text-secondary)",
                 }}
               >
-                <Icon className={`h-4 w-4 ${isActive ? "text-purple-400" : ""}`} />
-                {item.label}
-              </Link>
-            );
-          })}
-          <button
-            onClick={handleLogout}
-            className="flex flex-col items-center gap-1 text-[9px] font-bold uppercase tracking-wider text-red-400 transition-all duration-200"
-          >
-            <LogOut className="h-4 w-4" />
-            <span>Logout</span>
-          </button>
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Drawer Navigation Links */}
+            <nav className="flex-1 p-4 flex flex-col gap-1.5">
+              {navItems.map((item) => {
+                const Icon = item.icon;
+                const isActive = isItemActive(item.href);
+
+                return (
+                  <Link
+                    key={item.href}
+                    href={item.href}
+                    onClick={() => setIsDrawerOpen(false)}
+                    className="flex items-center gap-3 px-3.5 py-3 min-h-[44px] rounded-lg text-xs font-bold tracking-wide uppercase transition-all duration-200 w-full"
+                    style={{
+                      color: isActive ? "var(--text-primary)" : "var(--text-secondary)",
+                      backgroundColor: isActive ? "var(--bg-tertiary)" : "transparent",
+                    }}
+                  >
+                    <Icon
+                      className="h-4 w-4 shrink-0"
+                      style={{
+                        color: isActive ? "var(--accent-purple)" : "inherit",
+                      }}
+                    />
+                    <span>{item.label}</span>
+                  </Link>
+                );
+              })}
+            </nav>
+
+            {/* Drawer Footer with Logout */}
+            <div
+              className="p-4 border-t mt-auto shrink-0"
+              style={{ borderColor: "var(--border)" }}
+            >
+              <button
+                type="button"
+                onClick={() => {
+                  setIsDrawerOpen(false);
+                  handleLogout();
+                }}
+                className="flex items-center justify-center gap-2 px-4 py-3 min-h-[44px] rounded-lg text-xs font-bold uppercase tracking-wider transition-all duration-200 w-full border"
+                style={{
+                  backgroundColor: "var(--bg-primary)",
+                  borderColor: "var(--border)",
+                  color: "var(--danger)",
+                }}
+              >
+                <LogOut className="h-4 w-4" />
+                <span>Log Out</span>
+              </button>
+            </div>
+          </div>
         </div>
-      </header>
+      )}
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">{children}</div>
     </div>
   );
 }
+
