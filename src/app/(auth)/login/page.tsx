@@ -4,7 +4,7 @@ import { useState, Suspense } from "react";
 import { signIn } from "next-auth/react";
 import { useRouter, useSearchParams } from "next/navigation";
 import Link from "next/link";
-import { Swords, Eye, EyeOff, Zap, AlertCircle, CheckCircle2 } from "lucide-react";
+import { Swords, Eye, EyeOff, Zap, AlertCircle, CheckCircle2, Mail } from "lucide-react";
 
 function LoginForm() {
   const router = useRouter();
@@ -17,10 +17,15 @@ function LoginForm() {
   const [showPassword, setShowPassword] = useState(false);
   const [error, setError] = useState("");
   const [loading, setLoading] = useState(false);
+  const [isUnverified, setIsUnverified] = useState(false);
+  const [resending, setResending] = useState(false);
+  const [resendMessage, setResendMessage] = useState<{ text: string; type: "success" | "error" } | null>(null);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError("");
+    setIsUnverified(false);
+    setResendMessage(null);
     setLoading(true);
 
     const result = await signIn("credentials", {
@@ -33,12 +38,52 @@ function LoginForm() {
 
     if (result?.error) {
       if (result.error === "EmailNotVerified" || result.error.includes("EmailNotVerified")) {
+        setIsUnverified(true);
         setError("Please check your email to verify your account before signing in.");
       } else {
         setError("Invalid email or password");
       }
     } else {
       router.push("/dashboard");
+    }
+  };
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      setError("Please enter your email address above.");
+      return;
+    }
+
+    setResending(true);
+    setResendMessage(null);
+
+    try {
+      const res = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ email }),
+      });
+
+      const data = await res.json();
+      setResending(false);
+
+      if (!res.ok) {
+        setResendMessage({
+          text: data.error || "Failed to resend verification email.",
+          type: "error",
+        });
+      } else {
+        setResendMessage({
+          text: "Verification link sent! Please check your inbox.",
+          type: "success",
+        });
+      }
+    } catch {
+      setResending(false);
+      setResendMessage({
+        text: "Network error. Please try again.",
+        type: "error",
+      });
     }
   };
 
@@ -96,6 +141,35 @@ function LoginForm() {
         <div className="flex items-center gap-2.5 p-3 sm:p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs sm:text-sm animate-fadeIn">
           <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
           <span className="font-medium">{error}</span>
+        </div>
+      )}
+
+      {/* Resend Verification Action Block */}
+      {isUnverified && (
+        <div className="flex flex-col gap-2.5 p-3.5 sm:p-4 rounded-xl bg-purple-950/40 border border-purple-800/40 text-xs sm:text-sm animate-fadeIn">
+          <div className="flex items-center justify-between gap-2">
+            <span className="text-slate-300 flex items-center gap-1.5">
+              <Mail className="h-3.5 w-3.5 text-purple-400" />
+              Need a new link?
+            </span>
+            <button
+              type="button"
+              onClick={handleResendVerification}
+              disabled={resending}
+              className="font-bold text-purple-400 hover:text-purple-300 transition underline underline-offset-4 disabled:opacity-50 cursor-pointer"
+            >
+              {resending ? "Sending..." : "Resend verification email"}
+            </button>
+          </div>
+          {resendMessage && (
+            <p
+              className={`text-xs font-medium ${
+                resendMessage.type === "success" ? "text-emerald-400" : "text-rose-400"
+              }`}
+            >
+              {resendMessage.text}
+            </p>
+          )}
         </div>
       )}
 
