@@ -23,6 +23,7 @@ model User {
   momentumScore Decimal  @default(100)
   createdAt     DateTime @default(now())
   lastLoginAt   DateTime?
+  emailVerified DateTime?   // null = unverified, timestamp = verified at
   password      String?   // nullable — Google users won't have one
   
   // Streak protection fields (Phase 10)

@@ -9,10 +9,11 @@ const baseAdapter = PrismaAdapter(prisma);
 const adapter = {
   ...baseAdapter,
   createUser: (data: any) => {
-    const { name, image, emailVerified, ...rest } = data;
+    const { name, image, ...rest } = data;
     return prisma.user.create({
       data: {
         ...rest,
+        emailVerified: data.emailVerified || new Date(),
         displayName: name || rest.email?.split("@")[0] || "Hero",
         avatarUrl: image || null,
       },
@@ -34,8 +35,9 @@ export const authOptions: NextAuthOptions = {
           return null;
         }
 
+        const normalizedEmail = credentials.email.toLowerCase().trim();
         const user = await prisma.user.findUnique({
-          where: { email: credentials.email },
+          where: { email: normalizedEmail },
         });
 
         if (!user || !user.password) {
@@ -50,6 +52,11 @@ export const authOptions: NextAuthOptions = {
 
         if (!isPasswordValid) {
           return null;
+        }
+
+        // Email must be verified before credentials login is permitted
+        if (!user.emailVerified) {
+          throw new Error("EmailNotVerified");
         }
 
         return {
