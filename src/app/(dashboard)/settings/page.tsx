@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import {
   ShieldCheck,
   Swords,
@@ -18,7 +18,8 @@ import {
   AtSign,
   Phone,
   Calendar,
-  Sparkles
+  Sparkles,
+  Camera
 } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
 
@@ -32,6 +33,11 @@ export default function SettingsPage() {
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [showDetailedInfo, setShowDetailedInfo] = useState(false);
+
+  // Avatar Upload State
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   // Personal Info State
   const [displayName, setDisplayName] = useState("");
@@ -62,6 +68,7 @@ export default function SettingsPage() {
         setConsent(!!data.trainingDataConsent);
         setAllowChallenges(data.allowChallenges ?? true);
         setCurrentEmail(data.email || "");
+        setAvatarUrl(data.avatarUrl || null);
         setPendingEmail(data.pendingEmail || null);
         setHasPassword(data.hasPassword ?? true);
         
@@ -86,6 +93,41 @@ export default function SettingsPage() {
   useEffect(() => {
     loadSettings();
   }, []);
+
+  // Avatar Upload Handler
+  const handleAvatarFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingAvatar(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/user/avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload avatar");
+      }
+
+      setAvatarUrl(data.avatarUrl);
+      setMessage("Profile picture updated successfully!");
+    } catch (err: any) {
+      setError(err.message || "Failed to upload avatar");
+    } finally {
+      setIsUploadingAvatar(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   // Save Personal Info
   const handleSaveProfile = async (e: React.FormEvent) => {
@@ -296,8 +338,54 @@ export default function SettingsPage() {
               Personal Info
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
-              Update your display name, username handle, and optional profile details.
+              Update your profile picture, display name, username handle, and optional profile details.
             </p>
+          </div>
+        </div>
+
+        {/* Profile Picture Upload Section */}
+        <div className="flex items-center gap-4 bg-slate-950/30 border border-slate-800/60 p-4 rounded-xl">
+          <div className="relative group shrink-0">
+            <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-purple-500/40 bg-slate-900 flex items-center justify-center shadow-md">
+              {isUploadingAvatar ? (
+                <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
+              ) : avatarUrl ? (
+                <img src={avatarUrl} alt="Profile Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <User className="h-8 w-8 text-purple-400" />
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="absolute bottom-0 right-0 p-1.5 rounded-full bg-purple-600 hover:bg-purple-500 text-white shadow-lg transition border border-slate-900 cursor-pointer disabled:opacity-50"
+              title="Upload profile picture"
+            >
+              <Camera className="h-3.5 w-3.5" />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleAvatarFileChange}
+              className="hidden"
+            />
+          </div>
+
+          <div className="flex flex-col gap-1">
+            <span className="text-xs font-bold text-white">Profile Picture</span>
+            <p className="text-[11px] text-slate-400">
+              Click the camera icon to upload a custom avatar (JPEG, PNG, or WebP up to 2MB).
+            </p>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="self-start text-xs font-bold text-purple-400 hover:text-purple-300 transition mt-0.5"
+            >
+              {isUploadingAvatar ? "Uploading..." : avatarUrl ? "Change Photo" : "Upload Photo"}
+            </button>
           </div>
         </div>
 

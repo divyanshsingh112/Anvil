@@ -15,6 +15,7 @@ export async function GET() {
       select: {
         id: true,
         email: true,
+        avatarUrl: true,
         pendingEmail: true,
         displayName: true,
         username: true,
@@ -34,6 +35,7 @@ export async function GET() {
 
     return NextResponse.json({
       email: user.email,
+      avatarUrl: user.avatarUrl,
       pendingEmail: user.pendingEmail,
       displayName: user.displayName,
       username: user.username,

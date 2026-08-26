@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, ComponentType } from "react";
+import { useEffect, useState, useRef, ComponentType } from "react";
 import { signOut } from "next-auth/react";
 import { useUserStore } from "@/store/useUserStore";
 import { useLabels } from "@/hooks/useLabels";
@@ -22,6 +22,8 @@ import {
   ShieldAlert,
   Lock,
   Check,
+  Camera,
+  AlertCircle,
 } from "lucide-react";
 import AvatarBuilder from "@/components/gamification/AvatarBuilder";
 import ProcrastinationFingerprint from "@/components/dashboard/ProcrastinationFingerprint";
@@ -70,11 +72,60 @@ export default function ProfilePage() {
   const [achievements, setAchievements] = useState<AchievementUI[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
 
   useEffect(() => {
     fetchUserStats();
     fetchAchievementsList();
+    fetchProfileSettings();
   }, [fetchUserStats]);
+
+  const fetchProfileSettings = async () => {
+    try {
+      const res = await fetch("/api/user/settings");
+      if (res.ok) {
+        const data = await res.json();
+        setAvatarUrl(data.avatarUrl || null);
+      }
+    } catch (e) {
+      console.error(e);
+    }
+  };
+
+  const handleAvatarUpload = async (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    setIsUploadingAvatar(true);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const res = await fetch("/api/user/avatar", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to upload avatar");
+      }
+
+      setAvatarUrl(data.avatarUrl);
+    } catch (err: any) {
+      setUploadError(err.message || "Failed to upload avatar");
+    } finally {
+      setIsUploadingAvatar(false);
+      if (fileInputRef.current) {
+        fileInputRef.current.value = "";
+      }
+    }
+  };
 
   const fetchAchievementsList = async () => {
     try {
@@ -124,13 +175,39 @@ export default function ProfilePage() {
         />
 
         <div className="flex flex-col md:flex-row gap-6 md:gap-8 items-center relative z-10">
-          {/* Layered Character Avatar */}
-          <AvatarBuilder
-            warriorCompletions={warriorCompletions}
-            mageCompletions={mageCompletions}
-            rogueCompletions={rogueCompletions}
-            size={96}
-          />
+          {/* Layered Character Avatar / Custom Avatar Upload */}
+          <div className="relative group shrink-0">
+            <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-purple-500/40 bg-slate-950/60 flex items-center justify-center shadow-lg">
+              {isUploadingAvatar ? (
+                <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
+              ) : avatarUrl ? (
+                <img src={avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
+              ) : (
+                <AvatarBuilder
+                  warriorCompletions={warriorCompletions}
+                  mageCompletions={mageCompletions}
+                  rogueCompletions={rogueCompletions}
+                  size={96}
+                />
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => fileInputRef.current?.click()}
+              disabled={isUploadingAvatar}
+              className="absolute -bottom-1 -right-1 p-2 rounded-full bg-purple-600 hover:bg-purple-500 text-white shadow-xl transition border border-slate-900 cursor-pointer disabled:opacity-50"
+              title="Change profile picture"
+            >
+              <Camera className="h-4 w-4" />
+            </button>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/jpeg,image/png,image/webp"
+              onChange={handleAvatarUpload}
+              className="hidden"
+            />
+          </div>
 
           <div className="flex-1 text-center md:text-left">
             <div className="flex flex-col sm:flex-row sm:items-center gap-3 justify-between">
@@ -141,6 +218,12 @@ export default function ProfilePage() {
                 <p className="text-sm mt-1" style={{ color: "var(--text-muted)" }}>
                   {labels.levelLabel} {level} {labels.habitSingular} Champion
                 </p>
+                {uploadError && (
+                  <p className="text-xs text-rose-400 mt-1.5 flex items-center gap-1">
+                    <AlertCircle className="h-3.5 w-3.5" />
+                    <span>{uploadError}</span>
+                  </p>
+                )}
               </div>
 
               <button
