@@ -1,0 +1,25 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" rx="64" fill="#0f111a"/>
+  <circle cx="64" cy="64" r="63" stroke="url(#male-border-grad)" stroke-width="2"/>
+  
+  <!-- Male Silhouette -->
+  <g fill="url(#male-avatar-grad)">
+    <!-- Short Hair / Head Silhouette -->
+    <path d="M64 26C51.5 26 44 33.5 44 46C44 57.5 52 64 64 64C76 64 84 57.5 84 46C84 33.5 76.5 26 64 26Z"/>
+    <!-- Hair Spikes / Masculine Trim -->
+    <path d="M43 42C43 31 52 24 64 24C76 24 85 31 85 42C85 36 78 28 64 28C50 28 43 36 43 42Z" fill="#c084fc" opacity="0.6"/>
+    <!-- Torso & Shoulders -->
+    <path d="M26 104C26 84 41 74 64 74C87 74 102 84 102 104C102 108 98 112 92 112H36C30 112 26 108 26 104Z"/>
+  </g>
+  
+  <defs>
+    <linearGradient id="male-border-grad" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a855f7"/>
+      <stop offset="1" stop-color="#38bdf8"/>
+    </linearGradient>
+    <linearGradient id="male-avatar-grad" x1="64" y1="24" x2="64" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#c084fc"/>
+      <stop offset="1" stop-color="#7c3aed"/>
+    </linearGradient>
+  </defs>
+</svg>

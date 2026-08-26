@@ -4,6 +4,7 @@ import { useEffect, useState, useRef, ComponentType } from "react";
 import { signOut } from "next-auth/react";
 import { useUserStore } from "@/store/useUserStore";
 import { useLabels } from "@/hooks/useLabels";
+import { getAvatarSrc } from "@/lib/avatar-helper";
 import {
   Coins,
   Flame,
@@ -73,6 +74,7 @@ export default function ProfilePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [avatarUrl, setAvatarUrl] = useState<string | null>(null);
+  const [gender, setGender] = useState<string | null>(null);
   const [isUploadingAvatar, setIsUploadingAvatar] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   const fileInputRef = useRef<HTMLInputElement>(null);
@@ -89,6 +91,7 @@ export default function ProfilePage() {
       if (res.ok) {
         const data = await res.json();
         setAvatarUrl(data.avatarUrl || null);
+        setGender(data.gender || null);
       }
     } catch (e) {
       console.error(e);
@@ -180,14 +183,11 @@ export default function ProfilePage() {
             <div className="w-24 h-24 rounded-2xl overflow-hidden border-2 border-purple-500/40 bg-slate-950/60 flex items-center justify-center shadow-lg">
               {isUploadingAvatar ? (
                 <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
-              ) : avatarUrl ? (
-                <img src={avatarUrl} alt="User Avatar" className="w-full h-full object-cover" />
               ) : (
-                <AvatarBuilder
-                  warriorCompletions={warriorCompletions}
-                  mageCompletions={mageCompletions}
-                  rogueCompletions={rogueCompletions}
-                  size={96}
+                <img
+                  src={getAvatarSrc(avatarUrl, gender)}
+                  alt="User Avatar"
+                  className="w-full h-full object-cover"
                 />
               )}
             </div>

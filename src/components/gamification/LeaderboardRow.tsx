@@ -1,12 +1,14 @@
 "use client";
 
-import { Crown, Medal, User } from "lucide-react";
+import { Crown, Medal } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
+import { getAvatarSrc } from "@/lib/avatar-helper";
 
 interface LeaderboardUser {
   id: string;
   displayName: string;
   avatarUrl: string | null;
+  gender?: string | null;
   level: number;
   xp: number;
   rank: number;
@@ -54,6 +56,8 @@ export default function LeaderboardRow({ user, isCurrentUser }: LeaderboardRowPr
     return {};
   };
 
+  const avatarSrc = getAvatarSrc(user.avatarUrl, user.gender);
+
   return (
     <div
       className="flex items-center justify-between p-4 rounded-xl border transition-all duration-300 gap-4"
@@ -82,15 +86,11 @@ export default function LeaderboardRow({ user, isCurrentUser }: LeaderboardRowPr
           className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full border bg-slate-950 overflow-hidden"
           style={{ borderColor: "var(--border)" }}
         >
-          {user.avatarUrl ? (
-            <img
-              src={user.avatarUrl}
-              alt={user.displayName}
-              className="h-full w-full object-cover"
-            />
-          ) : (
-            <User className="h-5 w-5 text-slate-400" />
-          )}
+          <img
+            src={avatarSrc}
+            alt={user.displayName}
+            className="h-full w-full object-cover"
+          />
         </div>
         <div className="min-w-0">
           <h4 className="text-sm font-extrabold text-white truncate flex items-center gap-1.5">

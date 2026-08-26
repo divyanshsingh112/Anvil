@@ -1,0 +1,23 @@
+<svg width="128" height="128" viewBox="0 0 128 128" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="128" height="128" rx="64" fill="#0f111a"/>
+  <circle cx="64" cy="64" r="63" stroke="url(#neutral-border-grad)" stroke-width="2"/>
+  
+  <!-- Neutral Silhouette -->
+  <g fill="url(#neutral-avatar-grad)">
+    <!-- Head Silhouette -->
+    <circle cx="64" cy="46" r="18"/>
+    <!-- Torso & Shoulders -->
+    <path d="M26 104C26 84 41 74 64 74C87 74 102 84 102 104C102 108 98 112 92 112H36C30 112 26 108 26 104Z"/>
+  </g>
+  
+  <defs>
+    <linearGradient id="neutral-border-grad" x1="0" y1="0" x2="128" y2="128" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#818cf8"/>
+      <stop offset="1" stop-color="#c084fc"/>
+    </linearGradient>
+    <linearGradient id="neutral-avatar-grad" x1="64" y1="28" x2="64" y2="112" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#a5b4fc"/>
+      <stop offset="1" stop-color="#6366f1"/>
+    </linearGradient>
+  </defs>
+</svg>

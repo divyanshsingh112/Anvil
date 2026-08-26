@@ -24,6 +24,7 @@ export async function GET() {
         id: true,
         displayName: true,
         avatarUrl: true,
+        gender: true,
         level: true,
         xp: true
       }
@@ -36,6 +37,7 @@ export async function GET() {
           id: string;
           displayName: string;
           avatarUrl: string | null;
+          gender: string | null;
           level: number;
           xp: any;
         },
@@ -44,6 +46,7 @@ export async function GET() {
         id: user.id,
         displayName: user.displayName || "Anonymous Hero",
         avatarUrl: user.avatarUrl,
+        gender: user.gender,
         level: user.level,
         xp: Number(user.xp),
         rank: index + 1

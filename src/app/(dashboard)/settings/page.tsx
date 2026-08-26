@@ -22,6 +22,7 @@ import {
   Camera
 } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
+import { getAvatarSrc } from "@/lib/avatar-helper";
 
 export default function SettingsPage() {
   const labels = useLabels();
@@ -349,10 +350,12 @@ export default function SettingsPage() {
             <div className="w-16 h-16 rounded-full overflow-hidden border-2 border-purple-500/40 bg-slate-900 flex items-center justify-center shadow-md">
               {isUploadingAvatar ? (
                 <Loader2 className="h-6 w-6 animate-spin text-purple-400" />
-              ) : avatarUrl ? (
-                <img src={avatarUrl} alt="Profile Avatar" className="w-full h-full object-cover" />
               ) : (
-                <User className="h-8 w-8 text-purple-400" />
+                <img
+                  src={getAvatarSrc(avatarUrl, gender)}
+                  alt="Profile Avatar"
+                  className="w-full h-full object-cover"
+                />
               )}
             </div>
             <button
