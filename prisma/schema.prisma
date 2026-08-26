@@ -6,6 +6,11 @@ datasource db {
   provider = "postgresql"
 }
 
+enum Role {
+  USER
+  ADMIN
+}
+
 // ─── USER ──────────────────────────────────────────────────────────
 
 model User {
@@ -25,6 +30,11 @@ model User {
   lastLoginAt   DateTime?
   emailVerified DateTime?   // null = unverified, timestamp = verified at
   password      String?   // nullable — Google users won't have one
+
+  // Admin & Role-based Access Control
+  role             Role     @default(USER)
+  adminPermissions String[] @default([])
+  isSuperAdmin     Boolean  @default(false)
   
   // Streak protection fields (Phase 10)
   streakShieldActive Boolean   @default(false)
@@ -365,5 +375,18 @@ model EnergyCheckin {
 
   @@unique([userId, date])
   @@index([userId, date])
+}
+
+// ─── ADMIN AUDIT LOG ───────────────────────────────────────────────
+
+model AdminAuditLog {
+  id           String   @id @default(uuid()) @db.Uuid
+  actorId      String   @db.Uuid
+  actorEmail   String
+  action       String   // e.g. "GRANT_ADMIN", "REVOKE_ADMIN", "DELETE_USER", "UPDATE_PERMISSIONS"
+  targetUserId String?  @db.Uuid
+  targetEmail  String?
+  details      String?  // free text, e.g. which permissions were granted
+  createdAt    DateTime @default(now())
 }
 

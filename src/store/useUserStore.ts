@@ -12,6 +12,8 @@ interface UserState extends UserGamification {
   trainingConsentUpdatedAt: string | null;
   hasSeenConsentPrompt: boolean;
   consistencyScore?: number;
+  role?: "USER" | "ADMIN";
+  isSuperAdmin?: boolean;
 
   fetchUserStats: (force?: boolean) => Promise<void>;
   applyToggleResult: (data: UserGamification) => void;
@@ -36,6 +38,8 @@ export const useUserStore = create<UserState>((set, get) => ({
   trainingConsentUpdatedAt: null,
   hasSeenConsentPrompt: true, // Default to true until fetched to prevent flash
   consistencyScore: undefined,
+  role: "USER",
+  isSuperAdmin: false,
   isLoading: false,
   error: null,
   lastFetched: null,
@@ -73,6 +77,8 @@ export const useUserStore = create<UserState>((set, get) => ({
         trainingConsentUpdatedAt: data.trainingConsentUpdatedAt || null,
         hasSeenConsentPrompt: data.hasSeenConsentPrompt !== undefined ? !!data.hasSeenConsentPrompt : true,
         consistencyScore: data.consistencyScore,
+        role: data.role || "USER",
+        isSuperAdmin: !!data.isSuperAdmin,
         isLoading: false,
         lastFetched: Date.now(),
       });

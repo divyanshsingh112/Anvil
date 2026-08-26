@@ -197,9 +197,8 @@ async function runLocalVerification(baseUrl) {
 
 async function main() {
   try {
-    // Start Next.js local server if testing locally
-    const PORT = process.env.PORT || 3000;
-    await runLocalVerification(`http://localhost:${PORT}`);
+    const targetUrl = process.env.TARGET_URL || 'https://anvilapp.online';
+    await runLocalVerification(targetUrl);
   } catch (err) {
     console.error('Verification error:', err);
     process.exit(1);

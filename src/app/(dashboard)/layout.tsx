@@ -5,7 +5,7 @@ import { usePathname } from "next/navigation";
 import { useUserStore } from "@/store/useUserStore";
 import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
-import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen, LogOut, Users, Settings, CalendarCheck, Menu, X } from "lucide-react";
+import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen, LogOut, Users, Settings, CalendarCheck, Menu, X, ShieldAlert } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
 import ConsentPromptModal from "@/components/modals/ConsentPromptModal";
 
@@ -15,7 +15,7 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   const pathname = usePathname();
-  const { coins, level, fetchUserStats } = useUserStore();
+  const { coins, level, role, fetchUserStats } = useUserStore();
   const labels = useLabels();
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
 
@@ -57,6 +57,9 @@ export default function DashboardLayout({
     { label: labels.leaderboardLabel, href: "/leaderboard", icon: Trophy },
     { label: "Profile", href: "/profile", icon: User },
     { label: "Settings", href: "/settings", icon: Settings },
+    ...(role === "ADMIN"
+      ? [{ label: "Admin Console", href: "/admin/users", icon: ShieldAlert }]
+      : []),
   ];
 
   const isItemActive = (href: string) => {

@@ -79,6 +79,8 @@ export async function GET() {
       hasSeenConsentPrompt: user.hasSeenConsentPrompt ?? false,
       allowChallenges: user.allowChallenges ?? true,
       consistencyScore,
+      role: user.role,
+      isSuperAdmin: user.isSuperAdmin,
     });
   } catch (error) {
     console.error("GET user stats error:", error);
