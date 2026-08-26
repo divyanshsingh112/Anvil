@@ -4,6 +4,8 @@ import { authOptions } from "@/lib/auth";
 import { prisma } from "@/lib/prisma";
 import { createClient } from "@supabase/supabase-js";
 
+export const dynamic = "force-dynamic";
+
 function detectImageType(buf: Buffer): "image/jpeg" | "image/png" | "image/webp" | null {
   if (buf.length < 12) return null;
 
@@ -75,31 +77,37 @@ export async function POST(request: Request) {
     const supabaseKey =
       process.env.SUPABASE_SERVICE_ROLE_KEY ||
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
-      process.env.SUPABASE_ANON_KEY ||
-      "";
+      process.env.SUPABASE_ANON_KEY;
 
-    // 4. Upload to Supabase Storage Bucket 'avatars'
-    if (supabaseKey) {
-      const supabase = createClient(supabaseUrl, supabaseKey);
-      const { error: uploadError } = await supabase.storage
-        .from("avatars")
-        .upload(storagePath, buffer, {
-          contentType: detectedType,
-          upsert: false,
-        });
-
-      if (uploadError) {
-        console.error("Supabase storage upload error:", uploadError);
-        return NextResponse.json(
-          { error: `Storage upload failed: ${uploadError.message}` },
-          { status: 500 }
-        );
-      }
+    // 4. Guard against missing Supabase credentials — fail loudly, NEVER silently
+    if (!supabaseKey) {
+      console.error("Avatar upload failed: Supabase API key is missing from environment");
+      return NextResponse.json(
+        { error: "Storage configuration is missing on server" },
+        { status: 500 }
+      );
     }
 
-    const publicUrl = `${supabaseUrl}/storage/v1/object/public/avatars/${storagePath}`;
+    // 5. Upload to Supabase Storage Bucket 'avatars'
+    const supabase = createClient(supabaseUrl, supabaseKey);
+    const { data: uploadData, error: uploadError } = await supabase.storage
+      .from("avatars")
+      .upload(storagePath, buffer, {
+        contentType: detectedType,
+        upsert: false,
+      });
 
-    // 5. Update User.avatarUrl in Database
+    if (uploadError || !uploadData?.path) {
+      console.error("Supabase storage upload error:", uploadError);
+      return NextResponse.json(
+        { error: `Storage upload failed: ${uploadError?.message || "No upload path returned"}` },
+        { status: 500 }
+      );
+    }
+
+    // 6. Only write to Database once storage upload is 100% verified
+    const publicUrl = `${supabaseUrl}/storage/v1/object/public/avatars/${uploadData.path}`;
+
     const updatedUser = await prisma.user.update({
       where: { id: userId },
       data: { avatarUrl: publicUrl },
