@@ -19,13 +19,21 @@ import {
   Phone,
   Calendar,
   Sparkles,
-  Camera
+  Camera,
+  Trash2,
+  AlertTriangle,
+  X,
+  Check,
 } from "lucide-react";
+import { signOut } from "next-auth/react";
+import { useUserStore } from "@/store/useUserStore";
 import { useLabels } from "@/hooks/useLabels";
 import { getAvatarSrc } from "@/lib/avatar-helper";
 
 export default function SettingsPage() {
   const labels = useLabels();
+  const { isSuperAdmin: userStoreSuperAdmin } = useUserStore();
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false);
   const [consent, setConsent] = useState(false);
   const [allowChallenges, setAllowChallenges] = useState(true);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
@@ -60,6 +68,14 @@ export default function SettingsPage() {
   const [emailChangeMessage, setEmailChangeMessage] = useState("");
   const [emailChangeError, setEmailChangeError] = useState("");
 
+  // Danger Zone: Self-service Account Deletion State
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deletePassword, setDeletePassword] = useState("");
+  const [deleteConfirmEmail, setDeleteConfirmEmail] = useState("");
+  const [isDeletingAccount, setIsDeletingAccount] = useState(false);
+  const [deleteError, setDeleteError] = useState("");
+  const [deleteSuccess, setDeleteSuccess] = useState("");
+
   const loadSettings = async () => {
     setIsLoading(true);
     try {
@@ -72,6 +88,7 @@ export default function SettingsPage() {
         setAvatarUrl(data.avatarUrl || null);
         setPendingEmail(data.pendingEmail || null);
         setHasPassword(data.hasPassword ?? true);
+        setIsSuperAdmin(data.isSuperAdmin ?? userStoreSuperAdmin ?? false);
         
         // Personal info fields
         setDisplayName(data.displayName || "");
@@ -88,6 +105,52 @@ export default function SettingsPage() {
       console.error(e);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleOpenDeleteModal = () => {
+    setDeletePassword("");
+    setDeleteConfirmEmail("");
+    setDeleteError("");
+    setDeleteSuccess("");
+    setShowDeleteModal(true);
+  };
+
+  const handleCloseDeleteModal = () => {
+    if (isDeletingAccount) return;
+    setShowDeleteModal(false);
+    setDeletePassword("");
+    setDeleteConfirmEmail("");
+    setDeleteError("");
+  };
+
+  const handleSelfDeleteAccount = async () => {
+    setIsDeletingAccount(true);
+    setDeleteError("");
+    setDeleteSuccess("");
+
+    try {
+      const res = await fetch("/api/user/account", {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          currentPassword: hasPassword ? deletePassword : undefined,
+          confirmEmail: deleteConfirmEmail,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete account");
+      }
+
+      setDeleteSuccess("Your account has been permanently deleted. Signing you out...");
+      setTimeout(() => {
+        signOut({ callbackUrl: "/login?deleted=true" });
+      }, 1200);
+    } catch (err: any) {
+      setDeleteError(err.message || "An error occurred while deleting account");
+      setIsDeletingAccount(false);
     }
   };
 
@@ -835,7 +898,173 @@ export default function SettingsPage() {
             )}
           </div>
         </div>
+
+        {/* ─── DANGER ZONE (Non-super admins only) ─────────────────────────────────── */}
+        {!isSuperAdmin && !userStoreSuperAdmin && (
+          <div className="rounded-2xl border border-red-500/30 bg-red-950/10 backdrop-blur-md p-6 sm:p-8 flex flex-col gap-6 shadow-xl">
+            <div className="flex items-start gap-4">
+              <div className="p-3 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 flex items-center justify-center shrink-0">
+                <AlertTriangle className="h-6 w-6" />
+              </div>
+              <div className="flex flex-col gap-1">
+                <h2 className="text-xl font-black text-red-400 tracking-tight">Danger Zone</h2>
+                <p className="text-xs text-slate-400 leading-relaxed">
+                  Permanently delete your account, player progression, habit streaks, inventory, and achievements. This action is irreversible.
+                </p>
+              </div>
+            </div>
+
+            <div className="pt-2 border-t border-red-500/20 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+              <div className="text-xs text-red-300/80">
+                Once deleted, your account and all associated player records cannot be recovered.
+              </div>
+              <button
+                type="button"
+                onClick={handleOpenDeleteModal}
+                className="px-5 py-2.5 rounded-xl border border-red-500/40 bg-red-600/20 hover:bg-red-600/30 text-red-300 text-xs font-bold transition-all flex items-center gap-2 hover:text-white"
+              >
+                <Trash2 className="h-4 w-4" />
+                <span>Delete My Account</span>
+              </button>
+            </div>
+          </div>
+        )}
       </div>
+
+      {/* ─── SELF-SERVICE ACCOUNT DELETION MODAL ────────────────────────────────────── */}
+      {showDeleteModal && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            onClick={handleCloseDeleteModal}
+            aria-hidden="true"
+          />
+
+          {/* Modal Card */}
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative z-10 w-full max-w-md rounded-2xl border border-red-500/40 bg-slate-900 shadow-2xl overflow-hidden flex flex-col"
+          >
+            {/* Header */}
+            <div className="p-5 border-b border-red-500/20 bg-red-950/30 flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <div className="p-2 rounded-lg bg-red-500/20 border border-red-500/30 text-red-400 flex items-center justify-center">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-red-400">Delete Your Account</h3>
+                  <p className="text-[11px] text-slate-400">Irreversible self-service action</p>
+                </div>
+              </div>
+              <button
+                onClick={handleCloseDeleteModal}
+                disabled={isDeletingAccount}
+                className="p-1.5 rounded-lg text-slate-400 hover:text-white transition"
+              >
+                <X className="h-4 w-4" />
+              </button>
+            </div>
+
+            {/* Body */}
+            <div className="p-6 flex flex-col gap-4">
+              <div className="p-3.5 rounded-xl border border-red-500/30 bg-red-950/20 text-red-200 text-xs flex flex-col gap-1.5 leading-relaxed">
+                <p className="font-bold text-red-400 flex items-center gap-1.5">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  Warning: This cannot be undone!
+                </p>
+                <p className="text-[11px] text-red-300/90">
+                  Deleting your account will immediately and permanently erase all your habits, daily completions, streak history, achievements, and stats.
+                </p>
+              </div>
+
+              {deleteError && (
+                <div className="p-3 rounded-xl border border-red-500/30 bg-red-500/10 text-red-400 text-xs flex items-center gap-2">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{deleteError}</span>
+                </div>
+              )}
+
+              {deleteSuccess && (
+                <div className="p-3 rounded-xl border border-green-500/30 bg-green-500/10 text-green-400 text-xs flex items-center gap-2">
+                  <Check className="h-4 w-4 shrink-0" />
+                  <span>{deleteSuccess}</span>
+                </div>
+              )}
+
+              {/* Password Verification (Only if account has password) */}
+              {hasPassword ? (
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-xs font-bold text-slate-300">Enter Your Password</label>
+                  <input
+                    type="password"
+                    value={deletePassword}
+                    onChange={(e) => setDeletePassword(e.target.value)}
+                    placeholder="Current password"
+                    disabled={isDeletingAccount}
+                    className="w-full px-3.5 py-2.5 rounded-xl border border-slate-800 bg-slate-950/80 text-xs text-white outline-none focus:ring-2 focus:ring-red-500/40"
+                  />
+                </div>
+              ) : (
+                <div className="p-3 rounded-xl border border-slate-800 bg-slate-950/40 text-[11px] text-slate-400 flex items-center gap-2">
+                  <Info className="h-4 w-4 text-purple-400 shrink-0" />
+                  <span>Your account is authenticated via Google OAuth, so no password is required.</span>
+                </div>
+              )}
+
+              {/* Typed Email Confirmation */}
+              <div className="flex flex-col gap-1.5">
+                <label className="text-xs font-bold text-slate-300">
+                  Type your email to confirm: <span className="font-mono text-red-400 select-all">{currentEmail}</span>
+                </label>
+                <input
+                  type="email"
+                  value={deleteConfirmEmail}
+                  onChange={(e) => setDeleteConfirmEmail(e.target.value)}
+                  placeholder={currentEmail}
+                  disabled={isDeletingAccount}
+                  className="w-full px-3.5 py-2.5 rounded-xl border border-red-500/30 bg-slate-950/80 text-xs font-mono text-white outline-none focus:ring-2 focus:ring-red-500/40 placeholder:text-slate-600"
+                />
+              </div>
+            </div>
+
+            {/* Footer */}
+            <div className="p-4 border-t border-slate-800 bg-slate-950/40 flex items-center justify-end gap-2.5">
+              <button
+                type="button"
+                onClick={handleCloseDeleteModal}
+                disabled={isDeletingAccount}
+                className="px-4 py-2 rounded-xl border border-slate-800 text-xs font-bold text-slate-300 hover:bg-white/[0.05] transition"
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleSelfDeleteAccount}
+                disabled={
+                  isDeletingAccount ||
+                  deleteConfirmEmail.trim().toLowerCase() !== currentEmail.toLowerCase() ||
+                  (hasPassword && !deletePassword)
+                }
+                className="flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold text-white transition bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(239,68,68,0.2)]"
+              >
+                {isDeletingAccount ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Deleting Account...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    <span>Permanently Delete</span>
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

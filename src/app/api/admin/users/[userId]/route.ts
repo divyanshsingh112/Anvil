@@ -1,6 +1,7 @@
 import { NextResponse } from "next/server";
 import { requireAdminPermission, isSuperAdminTarget } from "@/lib/admin-auth";
 import { prismaDirect } from "@/lib/prisma";
+import { deleteUserWithCascade } from "@/lib/user-deletion";
 
 export const dynamic = "force-dynamic";
 
@@ -92,32 +93,15 @@ export async function DELETE(
     }
 
     // 7. Atomic transaction: write audit log and cascade deletion
-    const auditDetails = `Deleted user account ${targetUser.email} (displayName: "${
+    const auditDetails = `Admin deleted user account ${targetUser.email} (displayName: "${
       targetUser.displayName
     }", role: ${targetUser.role}, registered: ${targetUser.createdAt.toISOString()})`;
 
-    await prismaDirect.$transaction(async (tx) => {
-      // Step A: Write audit log record in same transaction BEFORE delete
-      await tx.adminAuditLog.create({
-        data: {
-          actorId: actor.id,
-          actorEmail: actor.email,
-          action: "DELETE_USER",
-          targetUserId: targetUser.id,
-          targetEmail: targetUser.email,
-          details: auditDetails,
-        },
-      });
-
-      // Step B: Explicitly delete unlinked relations (e.g. HabitAutopsy)
-      await tx.habitAutopsy.deleteMany({
-        where: { userId: targetUserId },
-      });
-
-      // Step C: Delete User (cascades all related models with onDelete: Cascade)
-      await tx.user.delete({
-        where: { id: targetUserId },
-      });
+    await deleteUserWithCascade({
+      userId: targetUserId,
+      actor: { id: actor.id, email: actor.email },
+      action: "DELETE_USER",
+      details: auditDetails,
     });
 
     return NextResponse.json({

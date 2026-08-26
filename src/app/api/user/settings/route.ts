@@ -27,6 +27,7 @@ export async function GET() {
         trainingConsentUpdatedAt: true,
         hasSeenConsentPrompt: true,
         allowChallenges: true,
+        isSuperAdmin: true,
       },
     });
 
@@ -48,6 +49,7 @@ export async function GET() {
       trainingConsentUpdatedAt: user.trainingConsentUpdatedAt,
       hasSeenConsentPrompt: user.hasSeenConsentPrompt ?? false,
       allowChallenges: user.allowChallenges ?? true,
+      isSuperAdmin: user.isSuperAdmin,
     });
   } catch (error) {
     console.error("GET /api/user/settings error:", error);
