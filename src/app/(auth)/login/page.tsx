@@ -10,6 +10,7 @@ function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
   const verified = searchParams.get("verified");
+  const emailChanged = searchParams.get("emailChanged");
   const urlError = searchParams.get("error");
 
   const [email, setEmail] = useState("");
@@ -128,11 +129,27 @@ function LoginForm() {
         </div>
       )}
 
+      {/* Success Banner from Email Change Confirmation */}
+      {emailChanged === "true" && (
+        <div className="flex items-center gap-2.5 p-3 sm:p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-xs sm:text-sm animate-fadeIn">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+          <span className="font-medium">Email address updated successfully! Please sign in with your new email.</span>
+        </div>
+      )}
+
       {/* URL Error Banner from Invalid/Expired Token */}
       {urlError === "InvalidVerificationToken" && (
         <div className="flex items-center gap-2.5 p-3 sm:p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs sm:text-sm animate-fadeIn">
           <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
           <span className="font-medium">Verification link is invalid or has expired. Please register again or sign in.</span>
+        </div>
+      )}
+
+      {/* URL Error Banner from Invalid/Expired Email Change Token */}
+      {urlError === "InvalidEmailChangeToken" && (
+        <div className="flex items-center gap-2.5 p-3 sm:p-4 rounded-xl bg-rose-500/10 border border-rose-500/30 text-rose-400 text-xs sm:text-sm animate-fadeIn">
+          <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+          <span className="font-medium">Email change link is invalid or has expired. Please log in and request a new change from Settings.</span>
         </div>
       )}
 

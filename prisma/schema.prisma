@@ -36,6 +36,14 @@ model User {
   trainingDataConsent      Boolean   @default(false)
   trainingConsentUpdatedAt DateTime?
   allowChallenges          Boolean   @default(true)
+  hasSeenConsentPrompt     Boolean   @default(false)
+
+  // Extended Profile & Email Change Fields
+  pendingEmail  String?  @unique
+  username      String?  @unique
+  phone         String?
+  gender        String?
+  age           Int?
 
   habits            Habit[]
   completions       Completion[]

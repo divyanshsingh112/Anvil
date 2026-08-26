@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, Swords, Info, Loader2 } from "lucide-react";
+import { ShieldCheck, Swords, Info, Loader2, Mail, KeyRound, Eye, EyeOff, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
 
 export default function SettingsPage() {
@@ -15,25 +15,41 @@ export default function SettingsPage() {
   const [error, setError] = useState("");
   const [showDetailedInfo, setShowDetailedInfo] = useState(false);
 
-  useEffect(() => {
-    const loadSettings = async () => {
-      setIsLoading(true);
-      try {
-        const res = await fetch("/api/user/stats");
-        if (res.ok) {
-          const data = await res.json();
-          setConsent(!!data.trainingDataConsent);
-          setAllowChallenges(data.allowChallenges ?? true);
-          if (data.trainingConsentUpdatedAt) {
-            setUpdatedAt(new Date(data.trainingConsentUpdatedAt).toLocaleString());
-          }
+  // Email Change State
+  const [currentEmail, setCurrentEmail] = useState("");
+  const [pendingEmail, setPendingEmail] = useState<string | null>(null);
+  const [hasPassword, setHasPassword] = useState(true);
+  const [currentPassword, setCurrentPassword] = useState("");
+  const [newEmail, setNewEmail] = useState("");
+  const [showPassword, setShowPassword] = useState(false);
+  const [isEmailChanging, setIsEmailChanging] = useState(false);
+  const [isCancellingPending, setIsCancellingPending] = useState(false);
+  const [emailChangeMessage, setEmailChangeMessage] = useState("");
+  const [emailChangeError, setEmailChangeError] = useState("");
+
+  const loadSettings = async () => {
+    setIsLoading(true);
+    try {
+      const res = await fetch("/api/user/settings");
+      if (res.ok) {
+        const data = await res.json();
+        setConsent(!!data.trainingDataConsent);
+        setAllowChallenges(data.allowChallenges ?? true);
+        setCurrentEmail(data.email || "");
+        setPendingEmail(data.pendingEmail || null);
+        setHasPassword(data.hasPassword ?? true);
+        if (data.trainingConsentUpdatedAt) {
+          setUpdatedAt(new Date(data.trainingConsentUpdatedAt).toLocaleString());
         }
-      } catch (e) {
-        console.error(e);
-      } finally {
-        setIsLoading(false);
       }
-    };
+    } catch (e) {
+      console.error(e);
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
     loadSettings();
   }, []);
 
@@ -90,6 +106,59 @@ export default function SettingsPage() {
     }
   };
 
+  const handleRequestEmailChange = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setEmailChangeMessage("");
+    setEmailChangeError("");
+    setIsEmailChanging(true);
+
+    try {
+      const res = await fetch("/api/user/email-change", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ currentPassword, newEmail }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to request email change");
+      }
+
+      setPendingEmail(data.pendingEmail);
+      setCurrentPassword("");
+      setNewEmail("");
+      setEmailChangeMessage(data.message || "Confirmation link sent to your new email address. Please check your inbox.");
+    } catch (err: any) {
+      setEmailChangeError(err.message || "Something went wrong. Please try again.");
+    } finally {
+      setIsEmailChanging(false);
+    }
+  };
+
+  const handleCancelPendingEmailChange = async () => {
+    setEmailChangeMessage("");
+    setEmailChangeError("");
+    setIsCancellingPending(true);
+
+    try {
+      const res = await fetch("/api/user/email-change", {
+        method: "DELETE",
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to cancel pending email change");
+      }
+
+      setPendingEmail(null);
+      setEmailChangeMessage("Pending email change cancelled successfully.");
+    } catch (err: any) {
+      setEmailChangeError(err.message || "Failed to cancel pending change.");
+    } finally {
+      setIsCancellingPending(false);
+    }
+  };
+
   if (isLoading) {
     return (
       <div className="min-h-[60vh] flex flex-col items-center justify-center gap-2">
@@ -100,19 +169,199 @@ export default function SettingsPage() {
   }
 
   return (
-    <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-6">
+    <div className="max-w-3xl mx-auto px-4 py-8 flex flex-col gap-6 font-geist">
       <div>
-        <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2">
+        <h1 className="text-3xl font-extrabold text-white tracking-tight flex items-center gap-2 font-sora">
           Settings
         </h1>
         <p className="text-sm text-slate-400 mt-1">
-          Manage your account settings, privacy configurations, and options.
+          Manage your account credentials, privacy configurations, and duel preferences.
         </p>
       </div>
 
       {/* Message banners */}
-      {message && <div className="text-xs text-emerald-400 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20">{message}</div>}
-      {error && <div className="text-xs text-rose-400 bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">{error}</div>}
+      {message && (
+        <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20">
+          <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+          <span>{message}</span>
+        </div>
+      )}
+      {error && (
+        <div className="flex items-center gap-2 text-xs text-rose-400 bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">
+          <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+          <span>{error}</span>
+        </div>
+      )}
+
+      {/* Email Address & Change Email Card */}
+      <div
+        className="rounded-xl border p-6 transition-all duration-300 flex flex-col gap-5 relative overflow-hidden"
+        style={{
+          backgroundColor: "var(--bg-secondary)",
+          borderColor: "var(--border)",
+        }}
+      >
+        <div className="flex items-start gap-4">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border"
+            style={{
+              backgroundColor: "var(--bg-tertiary)",
+              borderColor: "var(--border)",
+            }}
+          >
+            <Mail className="h-5 w-5 text-purple-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-extrabold text-white tracking-tight font-sora">
+              Email Address & Security
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              View your primary sign-in email address and request account email changes.
+            </p>
+          </div>
+        </div>
+
+        <div className="border-t border-slate-800/80 pt-4 flex flex-col gap-4">
+          {/* Current Email Display */}
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-slate-950/30 border border-slate-800/50 p-4 rounded-lg">
+            <div className="flex flex-col">
+              <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                CURRENT SIGN-IN EMAIL
+              </span>
+              <span className="text-sm font-semibold text-white mt-0.5 font-mono">
+                {currentEmail || "Loading..."}
+              </span>
+            </div>
+            <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-md bg-emerald-500/10 border border-emerald-500/20 text-emerald-400 text-xs font-semibold self-start sm:self-auto">
+              <CheckCircle2 className="h-3.5 w-3.5" />
+              <span>Verified & Active</span>
+            </div>
+          </div>
+
+          {/* Email Change Status Notifications */}
+          {emailChangeMessage && (
+            <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20">
+              <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
+              <span>{emailChangeMessage}</span>
+            </div>
+          )}
+          {emailChangeError && (
+            <div className="flex items-center gap-2 text-xs text-rose-400 bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">
+              <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
+              <span>{emailChangeError}</span>
+            </div>
+          )}
+
+          {/* Pending Email Change State Banner */}
+          {pendingEmail ? (
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-4 rounded-lg bg-purple-950/30 border border-purple-800/40">
+              <div className="flex items-start gap-3">
+                <Mail className="h-5 w-5 text-purple-400 shrink-0 mt-0.5" />
+                <div className="flex flex-col gap-1">
+                  <span className="text-xs font-bold text-white">
+                    Verification Pending for: <span className="font-mono text-purple-300">{pendingEmail}</span>
+                  </span>
+                  <p className="text-xs text-slate-400">
+                    We sent a verification link to your new address. Click the link in your email to complete the swap. Your current email remains active until confirmed.
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={handleCancelPendingEmailChange}
+                disabled={isCancellingPending}
+                className="px-3 py-2 rounded-lg border border-slate-700 hover:border-rose-500/50 bg-slate-900/60 hover:bg-rose-950/30 text-slate-300 hover:text-rose-300 text-xs font-semibold transition shrink-0 flex items-center justify-center gap-1.5 disabled:opacity-50"
+              >
+                {isCancellingPending ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Cancelling...</span>
+                  </>
+                ) : (
+                  <>
+                    <XCircle className="h-3.5 w-3.5" />
+                    <span>Cancel Request</span>
+                  </>
+                )}
+              </button>
+            </div>
+          ) : !hasPassword ? (
+            /* OAuth Google Account Notice */
+            <div className="flex items-start gap-3 p-4 rounded-lg bg-slate-900/40 border border-slate-800 text-xs text-slate-400">
+              <Info className="h-4 w-4 text-purple-400 shrink-0 mt-0.5" />
+              <p>
+                This account is signed in using Google OAuth. Accounts created via Google sign-in cannot change their email address through password confirmation.
+              </p>
+            </div>
+          ) : (
+            /* Email Change Form */
+            <form onSubmit={handleRequestEmailChange} className="flex flex-col gap-4 mt-1">
+              <div className="text-xs text-slate-400">
+                To change your email address, confirm your current password and specify your new email address. A confirmation link will be delivered to the new address.
+              </div>
+
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                {/* Current Password Field */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    CURRENT PASSWORD
+                  </label>
+                  <div className="relative">
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      value={currentPassword}
+                      onChange={(e) => setCurrentPassword(e.target.value)}
+                      required
+                      placeholder="••••••••"
+                      className="input-forge w-full h-10 pl-3.5 pr-10 rounded-lg text-sm placeholder:text-slate-500"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-200 transition p-0.5"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* New Email Field */}
+                <div className="flex flex-col gap-1.5">
+                  <label className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                    NEW EMAIL ADDRESS
+                  </label>
+                  <input
+                    type="email"
+                    value={newEmail}
+                    onChange={(e) => setNewEmail(e.target.value)}
+                    required
+                    placeholder="new-email@domain.com"
+                    className="input-forge w-full h-10 px-3.5 rounded-lg text-sm placeholder:text-slate-500"
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={isEmailChanging}
+                className="self-start px-4 py-2.5 rounded-lg font-bold text-xs text-white bg-purple-600 hover:bg-purple-500 transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer mt-1"
+              >
+                {isEmailChanging ? (
+                  <>
+                    <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                    <span>Sending Confirmation Link...</span>
+                  </>
+                ) : (
+                  <>
+                    <KeyRound className="h-3.5 w-3.5" />
+                    <span>Request Email Change</span>
+                  </>
+                )}
+              </button>
+            </form>
+          )}
+        </div>
+      </div>
 
       {/* Rival Challengeability Toggle Card */}
       <div
@@ -133,7 +382,7 @@ export default function SettingsPage() {
             <Swords className="h-5 w-5 text-purple-400" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-extrabold text-white tracking-tight">
+            <h3 className="text-base font-extrabold text-white tracking-tight font-sora">
               Rival Challenges
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
@@ -186,7 +435,7 @@ export default function SettingsPage() {
             <ShieldCheck className="h-5 w-5 text-purple-400" />
           </div>
           <div className="flex-1">
-            <h3 className="text-base font-extrabold text-white tracking-tight">
+            <h3 className="text-base font-extrabold text-white tracking-tight font-sora">
               AI & Model Training Consent
             </h3>
             <p className="text-xs text-slate-400 mt-0.5">
@@ -279,4 +528,3 @@ export default function SettingsPage() {
     </div>
   );
 }
-
