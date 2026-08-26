@@ -37,6 +37,7 @@ export async function GET(request: Request) {
           displayName: true,
           role: true,
           isSuperAdmin: true,
+          adminPermissions: true,
           createdAt: true,
           hasSeenConsentPrompt: true,
         },
@@ -54,6 +55,13 @@ export async function GET(request: Request) {
         limit,
         total,
         totalPages: Math.ceil(total / limit) || 1,
+      },
+      viewer: {
+        id: authResult.user.id,
+        email: authResult.user.email,
+        role: authResult.user.role,
+        isSuperAdmin: authResult.user.isSuperAdmin,
+        adminPermissions: authResult.user.adminPermissions,
       },
     });
   } catch (error) {
