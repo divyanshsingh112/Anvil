@@ -7,6 +7,7 @@ import { useEffect, useState } from "react";
 import { signOut } from "next-auth/react";
 import { Swords, ShoppingBag, Trophy, User, Coins, BookOpen, LogOut, Users, Settings, CalendarCheck, Menu, X } from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
+import ConsentPromptModal from "@/components/modals/ConsentPromptModal";
 
 export default function DashboardLayout({
   children,
@@ -285,6 +286,9 @@ export default function DashboardLayout({
 
       {/* Main Content Area */}
       <div className="flex-1 flex flex-col">{children}</div>
+
+      {/* One-Time First-Login AI Consent Prompt Modal */}
+      <ConsentPromptModal />
     </div>
   );
 }

@@ -25,6 +25,7 @@ export async function GET() {
         password: true,
         trainingDataConsent: true,
         trainingConsentUpdatedAt: true,
+        hasSeenConsentPrompt: true,
         allowChallenges: true,
       },
     });
@@ -45,6 +46,7 @@ export async function GET() {
       hasPassword: user.password !== null,
       trainingDataConsent: user.trainingDataConsent,
       trainingConsentUpdatedAt: user.trainingConsentUpdatedAt,
+      hasSeenConsentPrompt: user.hasSeenConsentPrompt ?? false,
       allowChallenges: user.allowChallenges ?? true,
     });
   } catch (error) {

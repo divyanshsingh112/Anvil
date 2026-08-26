@@ -10,11 +10,13 @@ interface UserState extends UserGamification {
   rogueCompletions: number;
   trainingDataConsent: boolean;
   trainingConsentUpdatedAt: string | null;
+  hasSeenConsentPrompt: boolean;
   consistencyScore?: number;
 
   fetchUserStats: (force?: boolean) => Promise<void>;
   applyToggleResult: (data: UserGamification) => void;
   updateClassCompletions: (classType: "warrior" | "mage" | "rogue", increment: boolean) => void;
+  markConsentPromptSeen: (consent?: boolean) => void;
 }
 
 export const useUserStore = create<UserState>((set, get) => ({
@@ -32,6 +34,7 @@ export const useUserStore = create<UserState>((set, get) => ({
   rogueCompletions: 0,
   trainingDataConsent: false,
   trainingConsentUpdatedAt: null,
+  hasSeenConsentPrompt: true, // Default to true until fetched to prevent flash
   consistencyScore: undefined,
   isLoading: false,
   error: null,
@@ -68,6 +71,7 @@ export const useUserStore = create<UserState>((set, get) => ({
         rogueCompletions: data.rogueCompletions || 0,
         trainingDataConsent: !!data.trainingDataConsent,
         trainingConsentUpdatedAt: data.trainingConsentUpdatedAt || null,
+        hasSeenConsentPrompt: data.hasSeenConsentPrompt !== undefined ? !!data.hasSeenConsentPrompt : true,
         consistencyScore: data.consistencyScore,
         isLoading: false,
         lastFetched: Date.now(),
@@ -100,5 +104,17 @@ export const useUserStore = create<UserState>((set, get) => ({
         [field]: Math.max(0, state[field] + change),
       };
     });
+  },
+
+  markConsentPromptSeen: (consent?: boolean) => {
+    set((state) => ({
+      hasSeenConsentPrompt: true,
+      ...(typeof consent === "boolean"
+        ? {
+            trainingDataConsent: consent,
+            trainingConsentUpdatedAt: new Date().toISOString(),
+          }
+        : {}),
+    }));
   },
 }));

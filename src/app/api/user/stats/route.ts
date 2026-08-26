@@ -76,6 +76,7 @@ export async function GET() {
       rogueCompletions: stats?.rogueCompletions || 0,
       trainingDataConsent: user.trainingDataConsent,
       trainingConsentUpdatedAt: user.trainingConsentUpdatedAt,
+      hasSeenConsentPrompt: user.hasSeenConsentPrompt ?? false,
       allowChallenges: user.allowChallenges ?? true,
       consistencyScore,
     });
