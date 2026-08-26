@@ -1,7 +1,25 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { ShieldCheck, Swords, Info, Loader2, Mail, KeyRound, Eye, EyeOff, AlertCircle, CheckCircle2, XCircle } from "lucide-react";
+import {
+  ShieldCheck,
+  Swords,
+  Info,
+  Loader2,
+  Mail,
+  KeyRound,
+  Eye,
+  EyeOff,
+  AlertCircle,
+  CheckCircle2,
+  XCircle,
+  User,
+  Save,
+  AtSign,
+  Phone,
+  Calendar,
+  Sparkles
+} from "lucide-react";
 import { useLabels } from "@/hooks/useLabels";
 
 export default function SettingsPage() {
@@ -10,10 +28,18 @@ export default function SettingsPage() {
   const [allowChallenges, setAllowChallenges] = useState(true);
   const [updatedAt, setUpdatedAt] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isSaving, setIsSaving] = useState(false);
+  const [isSavingConsent, setIsSavingConsent] = useState(false);
   const [message, setMessage] = useState("");
   const [error, setError] = useState("");
   const [showDetailedInfo, setShowDetailedInfo] = useState(false);
+
+  // Personal Info State
+  const [displayName, setDisplayName] = useState("");
+  const [username, setUsername] = useState("");
+  const [phone, setPhone] = useState("");
+  const [gender, setGender] = useState("");
+  const [age, setAge] = useState<string | number>("");
+  const [isSavingProfile, setIsSavingProfile] = useState(false);
 
   // Email Change State
   const [currentEmail, setCurrentEmail] = useState("");
@@ -38,6 +64,14 @@ export default function SettingsPage() {
         setCurrentEmail(data.email || "");
         setPendingEmail(data.pendingEmail || null);
         setHasPassword(data.hasPassword ?? true);
+        
+        // Personal info fields
+        setDisplayName(data.displayName || "");
+        setUsername(data.username || "");
+        setPhone(data.phone || "");
+        setGender(data.gender || "");
+        setAge(data.age !== null && data.age !== undefined ? String(data.age) : "");
+
         if (data.trainingConsentUpdatedAt) {
           setUpdatedAt(new Date(data.trainingConsentUpdatedAt).toLocaleString());
         }
@@ -53,8 +87,54 @@ export default function SettingsPage() {
     loadSettings();
   }, []);
 
+  // Save Personal Info
+  const handleSaveProfile = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsSavingProfile(true);
+    setMessage("");
+    setError("");
+
+    try {
+      const bodyPayload: {
+        displayName: string;
+        username?: string | null;
+        phone?: string | null;
+        gender?: string | null;
+        age?: number | null;
+      } = {
+        displayName: displayName.trim(),
+        username: username.trim() || null,
+        phone: phone.trim() || null,
+        gender: gender.trim() || null,
+        age: age !== "" ? parseInt(String(age), 10) : null,
+      };
+
+      const res = await fetch("/api/user/settings", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(bodyPayload),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to update profile");
+      }
+
+      setDisplayName(data.displayName || "");
+      setUsername(data.username || "");
+      setPhone(data.phone || "");
+      setGender(data.gender || "");
+      setAge(data.age !== null && data.age !== undefined ? String(data.age) : "");
+      setMessage("Personal information updated successfully!");
+    } catch (err: any) {
+      setError(err.message || "Failed to update profile");
+    } finally {
+      setIsSavingProfile(false);
+    }
+  };
+
   const handleToggleConsent = async () => {
-    setIsSaving(true);
+    setIsSavingConsent(true);
     setMessage("");
     setError("");
     try {
@@ -72,16 +152,16 @@ export default function SettingsPage() {
       const data = await res.json();
       setConsent(data.trainingDataConsent);
       setUpdatedAt(data.trainingConsentUpdatedAt ? new Date(data.trainingConsentUpdatedAt).toLocaleString() : null);
-      setMessage("Settings updated successfully!");
+      setMessage("Privacy settings updated successfully!");
     } catch (e: any) {
       setError(e.message);
     } finally {
-      setIsSaving(false);
+      setIsSavingConsent(false);
     }
   };
 
   const handleToggleAllowChallenges = async () => {
-    setIsSaving(true);
+    setIsSavingConsent(true);
     setMessage("");
     setError("");
     try {
@@ -98,11 +178,11 @@ export default function SettingsPage() {
 
       const data = await res.json();
       setAllowChallenges(data.allowChallenges);
-      setMessage("Settings updated successfully!");
+      setMessage("Duel challenge settings updated successfully!");
     } catch (e: any) {
       setError(e.message);
     } finally {
-      setIsSaving(false);
+      setIsSavingConsent(false);
     }
   };
 
@@ -175,25 +255,165 @@ export default function SettingsPage() {
           Settings
         </h1>
         <p className="text-sm text-slate-400 mt-1">
-          Manage your account credentials, privacy configurations, and duel preferences.
+          Manage your personal profile, credentials, privacy configurations, and duel preferences.
         </p>
       </div>
 
       {/* Message banners */}
       {message && (
-        <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20">
+        <div className="flex items-center gap-2 text-xs text-emerald-400 bg-emerald-500/10 p-3 rounded-lg border border-emerald-500/20 animate-fadeIn">
           <CheckCircle2 className="h-4 w-4 shrink-0 text-emerald-400" />
           <span>{message}</span>
         </div>
       )}
       {error && (
-        <div className="flex items-center gap-2 text-xs text-rose-400 bg-rose-500/10 p-3 rounded-lg border border-rose-500/20">
+        <div className="flex items-center gap-2 text-xs text-rose-400 bg-rose-500/10 p-3 rounded-lg border border-rose-500/20 animate-fadeIn">
           <AlertCircle className="h-4 w-4 shrink-0 text-rose-400" />
           <span>{error}</span>
         </div>
       )}
 
-      {/* Email Address & Change Email Card */}
+      {/* ─── CARD 1: Personal Info ─── */}
+      <div
+        className="rounded-xl border p-6 transition-all duration-300 flex flex-col gap-5 relative overflow-hidden"
+        style={{
+          backgroundColor: "var(--bg-secondary)",
+          borderColor: "var(--border)",
+        }}
+      >
+        <div className="flex items-start gap-4">
+          <div
+            className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border"
+            style={{
+              backgroundColor: "var(--bg-tertiary)",
+              borderColor: "var(--border)",
+            }}
+          >
+            <User className="h-5 w-5 text-purple-400" />
+          </div>
+          <div className="flex-1">
+            <h3 className="text-base font-extrabold text-white tracking-tight font-sora">
+              Personal Info
+            </h3>
+            <p className="text-xs text-slate-400 mt-0.5">
+              Update your display name, username handle, and optional profile details.
+            </p>
+          </div>
+        </div>
+
+        <form onSubmit={handleSaveProfile} className="border-t border-slate-800/80 pt-4 flex flex-col gap-4">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Display Name */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="displayName" className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <Sparkles className="h-3.5 w-3.5 text-purple-400" />
+                DISPLAY NAME <span className="text-rose-400">*</span>
+              </label>
+              <input
+                id="displayName"
+                type="text"
+                value={displayName}
+                onChange={(e) => setDisplayName(e.target.value)}
+                required
+                maxLength={50}
+                placeholder="e.g. Forgemaster Arthur"
+                className="input-forge w-full h-10 px-3.5 rounded-lg text-sm placeholder:text-slate-500"
+              />
+            </div>
+
+            {/* Username */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="username" className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <AtSign className="h-3.5 w-3.5 text-purple-400" />
+                USERNAME
+              </label>
+              <input
+                id="username"
+                type="text"
+                value={username}
+                onChange={(e) => setUsername(e.target.value)}
+                maxLength={20}
+                placeholder="e.g. arthur_forge"
+                className="input-forge w-full h-10 px-3.5 rounded-lg text-sm placeholder:text-slate-500"
+              />
+              <span className="text-[10px] text-slate-500">3-20 characters, alphanumeric & underscores only</span>
+            </div>
+
+            {/* Phone */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="phone" className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <Phone className="h-3.5 w-3.5 text-purple-400" />
+                PHONE NUMBER
+              </label>
+              <input
+                id="phone"
+                type="tel"
+                value={phone}
+                onChange={(e) => setPhone(e.target.value)}
+                maxLength={30}
+                placeholder="e.g. +1 (555) 123-4567"
+                className="input-forge w-full h-10 px-3.5 rounded-lg text-sm placeholder:text-slate-500"
+              />
+            </div>
+
+            {/* Gender */}
+            <div className="flex flex-col gap-1.5">
+              <label htmlFor="gender" className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                GENDER
+              </label>
+              <input
+                id="gender"
+                type="text"
+                value={gender}
+                onChange={(e) => setGender(e.target.value)}
+                maxLength={50}
+                placeholder="e.g. Non-binary, Female, Male"
+                className="input-forge w-full h-10 px-3.5 rounded-lg text-sm placeholder:text-slate-500"
+              />
+            </div>
+
+            {/* Age */}
+            <div className="flex flex-col gap-1.5 sm:col-span-2 sm:max-w-[200px]">
+              <label htmlFor="age" className="text-[11px] font-bold uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <Calendar className="h-3.5 w-3.5 text-purple-400" />
+                AGE
+              </label>
+              <input
+                id="age"
+                type="number"
+                min={13}
+                max={120}
+                value={age}
+                onChange={(e) => setAge(e.target.value)}
+                placeholder="13 - 120"
+                className="input-forge w-full h-10 px-3.5 rounded-lg text-sm placeholder:text-slate-500"
+              />
+            </div>
+          </div>
+
+          <div className="flex items-center justify-end gap-3 pt-2">
+            <button
+              type="submit"
+              disabled={isSavingProfile}
+              className="px-4 py-2.5 rounded-lg font-bold text-xs text-white bg-purple-600 hover:bg-purple-500 transition shadow-md flex items-center gap-2 disabled:opacity-50 cursor-pointer"
+            >
+              {isSavingProfile ? (
+                <>
+                  <Loader2 className="h-3.5 w-3.5 animate-spin" />
+                  <span>Saving Profile...</span>
+                </>
+              ) : (
+                <>
+                  <Save className="h-3.5 w-3.5" />
+                  <span>Save Personal Info</span>
+                </>
+              )}
+            </button>
+          </div>
+        </form>
+      </div>
+
+      {/* ─── CARD 2: Email Address & Security ─── */}
       <div
         className="rounded-xl border p-6 transition-all duration-300 flex flex-col gap-5 relative overflow-hidden"
         style={{
@@ -363,7 +583,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Rival Challengeability Toggle Card */}
+      {/* ─── CARD 3: Rival Challengeability Toggle Card ─── */}
       <div
         className="rounded-xl border p-6 transition-all duration-300 flex flex-col gap-4 relative overflow-hidden"
         style={{
@@ -401,7 +621,7 @@ export default function SettingsPage() {
             
             <button
               onClick={handleToggleAllowChallenges}
-              disabled={isSaving}
+              disabled={isSavingConsent}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                 allowChallenges ? "bg-purple-600" : "bg-slate-700"
               }`}
@@ -416,7 +636,7 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      {/* Privacy Consent Card */}
+      {/* ─── CARD 4: Privacy Consent Card ─── */}
       <div
         className="rounded-xl border p-6 transition-all duration-300 flex flex-col gap-4 relative overflow-hidden"
         style={{
@@ -459,7 +679,7 @@ export default function SettingsPage() {
             
             <button
               onClick={handleToggleConsent}
-              disabled={isSaving}
+              disabled={isSavingConsent}
               className={`relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none ${
                 consent ? "bg-purple-600" : "bg-slate-700"
               }`}
