@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState, useTransition } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useSession } from "next-auth/react";
 import { useUserStore } from "@/store/useUserStore";
@@ -20,6 +20,8 @@ import {
   ShieldCheck,
   Check,
   AlertCircle,
+  Trash2,
+  AlertTriangle,
 } from "lucide-react";
 
 interface AdminUserRow {
@@ -93,6 +95,13 @@ export default function AdminUsersPage() {
   const [isSaving, setIsSaving] = useState(false);
   const [modalError, setModalError] = useState<string | null>(null);
   const [modalSuccess, setModalSuccess] = useState<string | null>(null);
+
+  // Delete User Danger Modal State
+  const [userToDelete, setUserToDelete] = useState<AdminUserRow | null>(null);
+  const [confirmEmailInput, setConfirmEmailInput] = useState("");
+  const [isDeleting, setIsDeleting] = useState(false);
+  const [deleteModalError, setDeleteModalError] = useState<string | null>(null);
+  const [deleteModalSuccess, setDeleteModalSuccess] = useState<string | null>(null);
 
   // 1. Debounce search query input (300ms)
   useEffect(() => {
@@ -191,11 +200,18 @@ export default function AdminUsersPage() {
     setPagination((prev) => ({ ...prev, page: 1 }));
   };
 
-  // Determine if viewing admin can manage roles
+  // Determine viewer permissions
   const canManageAdmins =
     viewer?.isSuperAdmin === true ||
     (viewer?.role === "ADMIN" && viewer?.adminPermissions?.includes("MANAGE_ADMINS"));
 
+  const canDeleteUsers =
+    viewer?.isSuperAdmin === true ||
+    (viewer?.role === "ADMIN" && viewer?.adminPermissions?.includes("DELETE_USERS"));
+
+  const showActionsColumn = canManageAdmins || canDeleteUsers;
+
+  // --- Manage Access Modal Handlers ---
   const openManageModal = (user: AdminUserRow) => {
     setSelectedUser(user);
     setTargetRole(user.role);
@@ -255,11 +271,66 @@ export default function AdminUsersPage() {
 
       setTimeout(() => {
         closeManageModal();
-      }, 1000);
+      }, 900);
     } catch (err: any) {
       setModalError(err.message || "An error occurred");
     } finally {
       setIsSaving(false);
+    }
+  };
+
+  // --- Delete User Danger Modal Handlers ---
+  const openDeleteModal = (user: AdminUserRow) => {
+    setUserToDelete(user);
+    setConfirmEmailInput("");
+    setDeleteModalError(null);
+    setDeleteModalSuccess(null);
+  };
+
+  const closeDeleteModal = () => {
+    if (isDeleting) return;
+    setUserToDelete(null);
+    setConfirmEmailInput("");
+    setDeleteModalError(null);
+    setDeleteModalSuccess(null);
+  };
+
+  const handleDeleteUser = async () => {
+    if (!userToDelete) return;
+    setIsDeleting(true);
+    setDeleteModalError(null);
+    setDeleteModalSuccess(null);
+
+    try {
+      const res = await fetch(`/api/admin/users/${userToDelete.id}`, {
+        method: "DELETE",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          confirmEmail: confirmEmailInput,
+        }),
+      });
+
+      const data = await res.json();
+      if (!res.ok) {
+        throw new Error(data.error || "Failed to delete user");
+      }
+
+      setDeleteModalSuccess(`Successfully deleted user ${userToDelete.email}`);
+
+      // Remove deleted user from local table state and update total
+      setUsers((prev) => prev.filter((u) => u.id !== userToDelete.id));
+      setPagination((prev) => ({
+        ...prev,
+        total: Math.max(0, prev.total - 1),
+      }));
+
+      setTimeout(() => {
+        closeDeleteModal();
+      }, 1000);
+    } catch (err: any) {
+      setDeleteModalError(err.message || "Failed to delete account");
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -407,13 +478,13 @@ export default function AdminUsersPage() {
                 <th className="py-3.5 px-4 sm:px-6">Username</th>
                 <th className="py-3.5 px-4 sm:px-6">Role</th>
                 <th className="py-3.5 px-4 sm:px-6">Joined Date</th>
-                {canManageAdmins && <th className="py-3.5 px-4 sm:px-6 text-right">Actions</th>}
+                {showActionsColumn && <th className="py-3.5 px-4 sm:px-6 text-right">Actions</th>}
               </tr>
             </thead>
             <tbody className="divide-y" style={{ borderColor: "var(--border)" }}>
               {isLoadingUsers ? (
                 <tr>
-                  <td colSpan={canManageAdmins ? 5 : 4} className="py-16 text-center">
+                  <td colSpan={showActionsColumn ? 5 : 4} className="py-16 text-center">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Loader2 className="h-8 w-8 animate-spin text-purple-400" />
                       <span className="text-xs" style={{ color: "var(--text-secondary)" }}>
@@ -424,7 +495,7 @@ export default function AdminUsersPage() {
                 </tr>
               ) : users.length === 0 ? (
                 <tr>
-                  <td colSpan={canManageAdmins ? 5 : 4} className="py-16 text-center">
+                  <td colSpan={showActionsColumn ? 5 : 4} className="py-16 text-center">
                     <div className="flex flex-col items-center justify-center gap-2">
                       <Users className="h-8 w-8 opacity-40 text-purple-400" />
                       <p className="text-sm font-semibold text-white">No users found</p>
@@ -550,21 +621,35 @@ export default function AdminUsersPage() {
                       </td>
 
                       {/* Manage Actions Column */}
-                      {canManageAdmins && (
+                      {showActionsColumn && (
                         <td className="py-4 px-4 sm:px-6 text-right whitespace-nowrap">
                           {isProtectedSuperAdmin ? (
                             <span className="text-[11px] text-amber-400/50 italic">Protected</span>
                           ) : isCurrentViewer ? (
                             <span className="text-[11px] text-purple-400/50 italic">Your Account</span>
                           ) : (
-                            <button
-                              onClick={() => openManageModal(user)}
-                              className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg border text-xs font-bold transition-all duration-200 hover:bg-purple-500/20 hover:border-purple-500/40 text-purple-300 border-purple-500/30"
-                              title="Manage role & permissions"
-                            >
-                              <ShieldCheck className="h-3.5 w-3.5" />
-                              <span>Manage Access</span>
-                            </button>
+                            <div className="inline-flex items-center gap-1.5 justify-end">
+                              {canManageAdmins && (
+                                <button
+                                  onClick={() => openManageModal(user)}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all duration-200 hover:bg-purple-500/20 hover:border-purple-500/40 text-purple-300 border-purple-500/30"
+                                  title="Manage role & permissions"
+                                >
+                                  <ShieldCheck className="h-3.5 w-3.5" />
+                                  <span>Manage Access</span>
+                                </button>
+                              )}
+                              {canDeleteUsers && (
+                                <button
+                                  onClick={() => openDeleteModal(user)}
+                                  className="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg border text-xs font-bold transition-all duration-200 hover:bg-red-500/20 hover:border-red-500/40 text-red-400 border-red-500/20"
+                                  title="Delete player account"
+                                >
+                                  <Trash2 className="h-3.5 w-3.5" />
+                                  <span>Delete</span>
+                                </button>
+                              )}
+                            </div>
                           )}
                         </td>
                       )}
@@ -864,6 +949,160 @@ export default function AdminUsersPage() {
                   </>
                 ) : (
                   <span>Save Changes</span>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Delete User Danger Modal */}
+      {userToDelete && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
+          {/* Backdrop */}
+          <div
+            className="fixed inset-0 bg-black/80 backdrop-blur-sm transition-opacity"
+            onClick={closeDeleteModal}
+            aria-hidden="true"
+          />
+
+          {/* Danger Modal Card */}
+          <div
+            role="dialog"
+            aria-modal="true"
+            className="relative z-10 w-full max-w-md rounded-2xl border shadow-2xl overflow-hidden flex flex-col"
+            style={{
+              backgroundColor: "var(--bg-secondary)",
+              borderColor: "rgba(239, 68, 68, 0.4)",
+            }}
+          >
+            {/* Danger Modal Header */}
+            <div
+              className="p-5 border-b flex items-center justify-between"
+              style={{
+                borderColor: "rgba(239, 68, 68, 0.2)",
+                backgroundColor: "rgba(239, 68, 68, 0.08)",
+              }}
+            >
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl border flex items-center justify-center bg-red-500/15 border-red-500/30 text-red-400">
+                  <AlertTriangle className="h-5 w-5" />
+                </div>
+                <div>
+                  <h2 className="text-lg font-black text-red-400">Delete Player Account</h2>
+                  <p className="text-xs" style={{ color: "var(--text-secondary)" }}>
+                    Irreversible administrative action
+                  </p>
+                </div>
+              </div>
+
+              <button
+                onClick={closeDeleteModal}
+                disabled={isDeleting}
+                className="p-2 rounded-lg text-gray-400 hover:text-white transition-colors"
+                aria-label="Close dialog"
+              >
+                <X className="h-5 w-5" />
+              </button>
+            </div>
+
+            {/* Danger Modal Body */}
+            <div className="p-6 flex flex-col gap-4">
+              {/* Target User Banner */}
+              <div
+                className="p-3.5 rounded-xl border text-xs flex items-center justify-between"
+                style={{
+                  backgroundColor: "var(--bg-tertiary)",
+                  borderColor: "var(--border)",
+                }}
+              >
+                <div>
+                  <span className="font-semibold text-white block">{userToDelete.displayName}</span>
+                  <span className="font-mono text-purple-300">{userToDelete.email}</span>
+                </div>
+                <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300 border border-slate-700">
+                  {userToDelete.role}
+                </span>
+              </div>
+
+              {/* Explicit Warning Box */}
+              <div className="p-4 rounded-xl border bg-red-950/20 border-red-500/30 text-red-200 text-xs flex flex-col gap-2 leading-relaxed">
+                <p className="font-bold text-red-400 flex items-center gap-1.5">
+                  <AlertTriangle className="h-4 w-4 shrink-0" />
+                  This cannot be undone!
+                </p>
+                <p className="text-[11px] text-red-300/90">
+                  Permanently deletes this user and cascades all associated data: habits, completions, stats, inventory, achievements, and journal entries.
+                </p>
+              </div>
+
+              {/* Status Notifications */}
+              {deleteModalError && (
+                <div className="p-3.5 rounded-xl border text-xs flex items-center gap-2 bg-red-500/10 border-red-500/20 text-red-400">
+                  <AlertCircle className="h-4 w-4 shrink-0" />
+                  <span>{deleteModalError}</span>
+                </div>
+              )}
+
+              {deleteModalSuccess && (
+                <div className="p-3.5 rounded-xl border text-xs flex items-center gap-2 bg-green-500/10 border-green-500/20 text-green-400">
+                  <Check className="h-4 w-4 shrink-0" />
+                  <span>{deleteModalSuccess}</span>
+                </div>
+              )}
+
+              {/* Typed Confirmation UX Gate */}
+              <div className="flex flex-col gap-2 pt-1">
+                <label className="text-xs font-bold text-white">
+                  Type the exact email to confirm: <span className="text-red-400 font-mono select-all">{userToDelete.email}</span>
+                </label>
+                <input
+                  type="email"
+                  value={confirmEmailInput}
+                  onChange={(e) => setConfirmEmailInput(e.target.value)}
+                  placeholder={userToDelete.email}
+                  disabled={isDeleting}
+                  className="w-full px-3.5 py-2.5 rounded-xl border text-xs font-mono transition-all duration-200 outline-none focus:ring-2 focus:ring-red-500/40 bg-black/30 border-red-500/30 text-white placeholder:text-gray-600"
+                />
+              </div>
+            </div>
+
+            {/* Danger Modal Footer */}
+            <div
+              className="p-4 border-t flex items-center justify-end gap-2.5"
+              style={{
+                borderColor: "var(--border)",
+                backgroundColor: "rgba(0, 0, 0, 0.2)",
+              }}
+            >
+              <button
+                type="button"
+                onClick={closeDeleteModal}
+                disabled={isDeleting}
+                className="px-4 py-2 rounded-xl border text-xs font-bold transition-all text-gray-300 hover:bg-white/[0.05]"
+                style={{ borderColor: "var(--border)" }}
+              >
+                Cancel
+              </button>
+              <button
+                type="button"
+                onClick={handleDeleteUser}
+                disabled={
+                  isDeleting ||
+                  confirmEmailInput.trim().toLowerCase() !== userToDelete.email.toLowerCase()
+                }
+                className="flex items-center gap-2 px-5 py-2 rounded-xl text-xs font-bold text-white transition-all bg-red-600 hover:bg-red-700 disabled:opacity-40 disabled:cursor-not-allowed shadow-[0_0_15px_rgba(239,68,68,0.25)]"
+              >
+                {isDeleting ? (
+                  <>
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Deleting Account...</span>
+                  </>
+                ) : (
+                  <>
+                    <Trash2 className="h-4 w-4" />
+                    <span>Delete Account Permanently</span>
+                  </>
                 )}
               </button>
             </div>
