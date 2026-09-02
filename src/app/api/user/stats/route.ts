@@ -16,7 +16,11 @@ export async function GET() {
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
     }
 
-    const [user, stats] = await prisma.$transaction(async (tx) => {
+    const consistencyScorePromise = FEATURE_CONSISTENCY_SCORE
+      ? calculateConsistencyScore(prisma, session.user.id)
+      : Promise.resolve(undefined);
+
+    const transactionPromise = prisma.$transaction(async (tx) => {
       const u = await checkAndApplyStreakDecayAndRecharge(tx, session.user.id);
       let s = await tx.userStats.findUnique({
         where: { userId: session.user.id },
@@ -32,8 +36,13 @@ export async function GET() {
           },
         });
       }
-      return [u, s];
+      return [u, s] as const;
     });
+
+    const [[user, stats], consistencyScore] = await Promise.all([
+      transactionPromise,
+      consistencyScorePromise,
+    ]);
 
     if (!user) {
       return NextResponse.json({ error: "User not found" }, { status: 404 });
@@ -55,11 +64,6 @@ export async function GET() {
     import("@/lib/services/archetype-service").then(({ triggerLazyArchetypeClassification }) => {
       triggerLazyArchetypeClassification(session.user.id).catch(console.error);
     });
-
-    let consistencyScore: number | undefined = undefined;
-    if (FEATURE_CONSISTENCY_SCORE) {
-      consistencyScore = await calculateConsistencyScore(prisma, session.user.id);
-    }
 
     return NextResponse.json({
       xp: Number(user.xp),

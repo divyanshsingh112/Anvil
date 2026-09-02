@@ -18,39 +18,37 @@ export async function calculateConsistencyScore(
   const start29DaysAgo = new Date(targetDate.getTime() - 29 * 24 * 60 * 60 * 1000);
   start29DaysAgo.setUTCHours(0, 0, 0, 0);
 
-  // Fetch habits for user
-  const habits = await db.habit.findMany({
-    where: {
-      userId,
-      OR: [
-        { archivedAt: null },
-        { archivedAt: { gte: start29DaysAgo } },
-      ],
-    },
-    select: {
-      id: true,
-      createdAt: true,
-      archivedAt: true,
-      scheduledDays: true,
-    },
-  });
-
-  if (habits.length === 0) return 100;
-
-  // Fetch completions in the 30-day window (29 days ago through today inclusive)
-  const completions = await db.completion.findMany({
-    where: {
-      userId,
-      date: {
-        gte: start29DaysAgo,
-        lte: targetDate,
+  // Fetch habits and completions in parallel for user in the 30-day window
+  const [habits, completions] = await Promise.all([
+    db.habit.findMany({
+      where: {
+        userId,
+        OR: [
+          { archivedAt: null },
+          { archivedAt: { gte: start29DaysAgo } },
+        ],
       },
-    },
-    select: {
-      date: true,
-      habitId: true,
-    },
-  });
+      select: {
+        id: true,
+        createdAt: true,
+        archivedAt: true,
+        scheduledDays: true,
+      },
+    }),
+    db.completion.findMany({
+      where: {
+        userId,
+        date: {
+          gte: start29DaysAgo,
+          lte: targetDate,
+        },
+      },
+      select: {
+        date: true,
+        habitId: true,
+      },
+    }),
+  ]);
 
   let totalScheduledSlots = 0;
   let completedScheduledSlots = 0;
